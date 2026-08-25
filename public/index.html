@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Z Lab：张浩的个人数字空间，提供学习、娱乐、开发工具与求职工作台">
+  <meta name="theme-color" content="#285f4c">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Z Lab｜张浩的个人开发实验室">
+  <meta property="og:description" content="把想法做成可以打开的东西。学习、娱乐、开发工具与求职工作台。">
+  <meta property="og:image" content="https://zhangjik.bbroot.com/og.png?v=20260825-zlab3">
+  <meta property="og:image:width" content="1731">
+  <meta property="og:image:height" content="909">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Z Lab｜张浩的个人开发实验室">
+  <meta name="twitter:description" content="把想法做成可以打开的东西。学习、娱乐、开发工具与求职工作台。">
+  <meta name="twitter:image" content="https://zhangjik.bbroot.com/og.png?v=20260825-zlab3">
+  <title>Z Lab｜张浩的个人开发实验室</title>
+  <link rel="icon" href="favicon.ico?v=20260825-cute" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260825-cute">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260825-cute">
+  <link rel="manifest" href="site-manifest.json?v=20260825-zlab3">
+  <link rel="stylesheet" href="styles.css?v=20260825-project22">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="Z Lab 首页"><span class="brand-mark"><img src="brand-icon-96.png?v=20260825-cute" alt=""></span><span>Z Lab</span><small>PERSONAL DEV LAB</small></a>
+    <nav aria-label="主要导航">
+      <button class="nav-button active" data-view="home">首页</button>
+      <button class="nav-button" data-view="study">学习</button>
+      <button class="nav-button" data-view="play">娱乐</button>
+      <button class="nav-button" data-view="guides">攻略</button>
+      <button class="nav-button" data-view="life">生活</button>
+      <button class="nav-button" data-view="tools">工具箱</button>
+      <button class="nav-button career-nav" data-view="resume">简历制作</button>
+      <button class="nav-button career-nav" data-view="jobs">岗位搜索</button>
+      <button class="nav-button career-nav" data-view="tracker">投递管理 <i id="trackerNavCount">0</i></button>
+    </nav>
+    <button class="overview-button" id="overviewButton" type="button" aria-haspopup="dialog" aria-controls="functionDialog"><span>九宫格</span><b>全部功能</b></button>
+  </header>
+
+  <main>
+    <section id="homeView" class="view active" aria-labelledby="homeTitle">
+      <div class="lab-hero">
+        <div class="lab-hero-copy"><p class="eyebrow">ZHANG HAO · PERSONAL DIGITAL SPACE</p><h1 id="homeTitle">学习、工作、放松，<br>都放在一个地方。</h1><p>Z Lab 是我的个人数字空间。你可以专注学习、玩几个小游戏、使用日常工具，也可以完成简历和求职管理。</p><div class="lab-hero-actions"><button class="primary-button" type="button" data-go-view="study">开始专注学习</button><button class="secondary-button" type="button" data-go-view="play">轻松一下</button></div></div>
+        <div class="lab-console" aria-label="Z Lab 功能概览"><span class="console-kicker">AVAILABLE NOW · 2026</span><article><i>01</i><div><b>Z Study</b><small>专注 · 任务 · 学习记录</small></div><em>可使用</em></article><article><i>02</i><div><b>Z Play</b><small>小游戏 · 燕云攻略库</small></div><em>可使用</em></article><article><i>03</i><div><b>职达 Career Studio</b><small>简历 · 岗位 · 投递</small></div><em>可使用</em></article><article><i>04</i><div><b>Z Tools</b><small>浏览器里的实用工具</small></div><em>可使用</em></article></div>
+      </div>
+      <section class="quick-launch" aria-labelledby="quickLaunchTitle"><div class="quick-launch-head"><div><p class="eyebrow">QUICK START</p><h2 id="quickLaunchTitle">你想先做什么？</h2></div><p>核心功能都在这里，点击即可直接进入。</p></div><div class="quick-launch-grid"><button class="featured" type="button" data-go-view="study"><i>25</i><span><b>开始一次专注</b><small>番茄钟、单词卡、每日一题和错题本</small></span><em>开始 →</em></button><button type="button" data-go-view="play"><i>▦</i><span><b>玩个小游戏</b><small>九种小游戏和每日趣味内容</small></span><em>去玩 →</em></button><button class="guide-launch" type="button" data-go-view="guides"><i>燕</i><span><b>查燕云十六声攻略</b><small>新手、武学、装备、探索和副本</small></span><em>查攻略 →</em></button><button type="button" data-go-view="life"><i>⌂</i><span><b>打开生活空间</b><small>便签、书签、待办、记账和图片处理</small></span><em>打开 →</em></button><button type="button" data-go-view="resume"><i>文</i><span><b>制作或修改简历</b><small>选择模板、导入资料、导出 PDF</small></span><em>进入 →</em></button><button type="button" data-go-view="jobs"><i>⌕</i><span><b>搜索在线岗位</b><small>腾讯与飞书岗位库，每两小时更新</small></span><em>搜索 →</em></button><button type="button" data-go-view="tools"><i>{ }</i><span><b>使用日常工具</b><small>JSON、二维码、随机转盘和倒计时</small></span><em>打开 →</em></button></div></section>
+      <div class="lab-stats"><article title="每次重新打开网站计一次"><b id="visitorCount">—</b><span>累计打开次数</span></article><article><b>16</b><span>生活与浏览器小工具</span></article><article><b id="homeJobCount">17,000+</b><span>在线岗位记录</span></article><article><b>2h</b><span>岗位数据更新周期</span></article></div>
+      <section class="function-map" aria-labelledby="functionMapTitle">
+        <div class="function-map-head"><div><p class="eyebrow">FUNCTION MAP</p><h2 id="functionMapTitle">全站功能，一眼找到。</h2></div><p>按使用场景分组，点击即可直接进入。</p></div>
+        <div class="function-map-grid">
+          <article><header><i>01</i><div><span>学习成长</span><h3>保持专注和积累</h3></div></header><p>番茄钟、任务、单词卡、每日一题和错题本。</p><div><button type="button" data-go-view="study">打开学习空间</button></div></article>
+          <article><header><i>02</i><div><span>娱乐与攻略</span><h3>玩一局，查攻略</h3></div></header><p>九种小游戏和燕云十六声攻略库。</p><div><button type="button" data-go-view="play">小游戏</button><button type="button" data-go-view="guides">燕云攻略</button></div></article>
+          <article><header><i>03</i><div><span>生活空间</span><h3>收好日常小事</h3></div></header><p>便签、书签、待办、记账、图片和 Markdown。</p><div><button type="button" data-go-view="life">打开生活空间</button></div></article>
+          <article><header><i>04</i><div><span>日常工具</span><h3>打开即用的小工具</h3></div></header><p>JSON、二维码、随机转盘、倒计时和更多工具。</p><div><button type="button" data-go-view="tools">全部工具</button></div></article>
+          <article class="career-group"><header><i>05</i><div><span>求职工具</span><h3>从简历到投递</h3></div></header><p>制作简历、搜索在线岗位并管理投递进度。</p><div><button type="button" data-go-view="resume">简历制作</button><button type="button" data-go-view="jobs">岗位搜索</button><button type="button" data-go-view="tracker">投递管理</button></div></article>
+        </div>
+      </section>
+    </section>
+
+    <section id="studyView" class="view" aria-labelledby="studyTitle">
+      <div class="page-head lab-page-head"><div><p class="eyebrow">Z STUDY</p><h1 id="studyTitle">把今天要做的事，安静地完成。</h1><p>专注计时、学习任务和每日记录都保存在当前浏览器。</p></div><span class="local-badge"><i></i>LOCAL ONLY · 本地保存</span></div>
+      <div class="study-summary"><article><span>今日专注</span><b id="studyTodayMinutes">0 分钟</b><small id="studyTodaySessions">0 次完成</small></article><article><span>累计专注</span><b id="studyTotalMinutes">0 分钟</b><small>从第一次使用开始</small></article><article><span>连续学习</span><b id="studyStreak">0 天</b><small>完成一次专注即打卡</small></article></div>
+      <div class="study-grid">
+        <section class="focus-card">
+          <div class="panel-heading"><div><p class="eyebrow">FOCUS TIMER</p><h2>番茄专注钟</h2></div><label>专注时长<select id="pomodoroDuration"><option value="25">25 分钟</option><option value="45">45 分钟</option><option value="60">60 分钟</option></select></label></div>
+          <div class="focus-clock" id="focusClock"><span id="focusMode">专注时间</span><b id="focusTime">25:00</b><small>保持专注，只完成眼前这一件事。</small></div>
+          <div class="focus-actions"><button class="primary-button" type="button" id="focusStart">开始专注</button><button class="secondary-button" type="button" id="focusReset">重新计时</button></div>
+        </section>
+        <section class="study-tasks-card">
+          <div class="panel-heading"><div><p class="eyebrow">TODAY TASKS</p><h2>今天要完成什么？</h2></div><span id="studyTaskProgress">0 / 0</span></div>
+          <form id="studyTaskForm" class="study-task-form"><input id="studyTaskInput" maxlength="80" placeholder="例如：复习英语单词 30 分钟" aria-label="添加学习任务"><button class="primary-button" type="submit">添加</button></form>
+          <div class="study-task-list" id="studyTaskList"></div>
+        </section>
+        <section class="heatmap-card">
+          <div class="panel-heading"><div><p class="eyebrow">LEARNING HEATMAP</p><h2>最近八周的学习记录</h2></div><span>颜色越深，专注越多</span></div>
+          <div class="study-heatmap" id="studyHeatmap" aria-label="最近八周学习热力图"></div>
+          <div class="heatmap-legend"><span>少</span><i></i><i></i><i></i><i></i><span>多</span></div>
+        </section>
+      </div>
+      <div class="learning-extra-grid">
+        <section class="learning-card flashcard-panel">
+          <div class="panel-heading"><div><p class="eyebrow">VOCABULARY FLASH CARDS</p><h2>英语单词卡</h2></div><span id="flashcardCount">载入中</span></div>
+          <div class="flashcard-deck-toolbar"><label><span>当前词库</span><select id="flashDeck" aria-label="选择单词词库"><option value="cet4">CET-4 四级词库</option><option value="cet6">CET-6 六级词库</option><option value="kaoyan">考研英语词库</option><option value="custom">我的卡片</option></select></label><button class="secondary-button" type="button" id="flashRandom">随机一张</button></div>
+          <div class="flashcard" id="flashcard" tabindex="0" role="button" aria-label="点击翻转单词卡"><div><b id="flashcardFront">正在载入词库</b><span id="flashcardBack">稍候即可开始复习</span></div></div>
+          <div class="flashcard-progress"><span id="flashcardProgress">准备词库中…</span><a href="https://github.com/grhliu/wordtyper-vocabularies" target="_blank" rel="noopener">开源词库：ECDICT · MIT ↗</a></div>
+          <div class="flashcard-actions"><button class="secondary-button" type="button" id="flashPrev">上一张</button><button class="primary-button" type="button" id="flashFlip">翻转卡片</button><button class="secondary-button" type="button" id="flashNext">下一张</button></div>
+          <form id="flashcardForm" class="flashcard-form"><input id="flashWord" maxlength="40" placeholder="添加自己的单词 / 知识点" aria-label="单词或知识点"><input id="flashMeaning" maxlength="120" placeholder="填写释义 / 答案" aria-label="释义或答案"><button class="primary-button" type="submit">添加到我的卡片</button></form>
+          <button class="text-link danger-link" type="button" id="flashDelete">删除当前自建卡片</button>
+        </section>
+        <section class="learning-card quiz-panel"><div class="panel-heading"><div><p class="eyebrow">DAILY QUIZ</p><h2>每日一题</h2></div><span id="quizCategory">综合知识</span></div><div class="quiz-question"><span id="quizNumber">01</span><h3 id="quizQuestion">题目加载中</h3></div><div class="quiz-options" id="quizOptions"></div><div class="quiz-feedback" id="quizFeedback">选择一个你认为正确的答案。</div><button class="secondary-button" type="button" id="nextQuiz">换一道题</button></section>
+        <section class="learning-card mistake-panel"><div class="panel-heading"><div><p class="eyebrow">MISTAKE BOOK</p><h2>错题本</h2></div><span id="mistakeCount">0 道</span></div><div class="mistake-list" id="mistakeList"></div><button class="text-link danger-link" type="button" id="clearMistakes">清空错题本</button></section>
+      </div>
+    </section>
+
+    <section id="playView" class="view" aria-labelledby="playTitle">
+      <div class="page-head lab-page-head"><div><p class="eyebrow">Z PLAY</p><h1 id="playTitle">休息几分钟，再继续出发。</h1><p>九种打开就能玩的小游戏和趣味内容，电脑与手机都可以使用。</p></div><span class="play-badge">NO LOGIN · 立即开玩</span></div>
+      <div class="play-grid">
+        <section class="game-card game-2048-card"><div class="game-card-head"><div><span>01</span><h2>2048</h2><p>合并相同数字，挑战更高分数。</p></div><div><b id="game2048Score">0</b><small>当前分数</small></div></div><div class="game-2048" id="game2048" aria-label="2048 游戏棋盘"></div><div class="game-actions"><button class="primary-button" id="new2048" type="button">新游戏</button><span>键盘方向键或滑动操作</span></div></section>
+        <section class="game-card snake-card"><div class="game-card-head"><div><span>02</span><h2>贪吃蛇</h2><p>吃掉果实，别撞到自己和边界。</p></div><div><b id="snakeScore">0</b><small>当前分数</small></div></div><canvas id="snakeCanvas" width="320" height="320" aria-label="贪吃蛇游戏画布"></canvas><div class="snake-controls" aria-label="贪吃蛇方向控制"><button type="button" data-snake-direction="up">↑</button><button type="button" data-snake-direction="left">←</button><button type="button" data-snake-direction="down">↓</button><button type="button" data-snake-direction="right">→</button></div><div class="game-actions"><button class="primary-button" id="startSnake" type="button">开始游戏</button><span>也可以使用键盘方向键</span></div></section>
+        <section class="game-card reaction-card"><div class="game-card-head"><div><span>03</span><h2>反应速度测试</h2><p>看到绿色后立刻点击，看看你有多快。</p></div><div><b id="reactionBest">—</b><small>最佳成绩</small></div></div><button class="reaction-zone" id="reactionZone" type="button"><b>点击开始</b><span>准备好后点击这里</span></button><div class="reaction-history" id="reactionHistory">还没有测试记录</div></section>
+      </div>
+      <div class="play-more-grid">
+        <section class="game-card"><div class="game-card-head"><div><span>04</span><h2>井字棋</h2><p>你执 X，与电脑来一局。</p></div><div><b id="ticStatus">轮到你</b><small>人机对战</small></div></div><div class="tic-board" id="ticBoard"></div><div class="game-actions"><button class="primary-button" id="newTicGame" type="button">新游戏</button><span id="ticScore">你 0 · 电脑 0</span></div></section>
+        <section class="game-card"><div class="game-card-head"><div><span>05</span><h2>扫雷</h2><p>找出所有安全方格，避开地雷。</p></div><div><b id="mineStatus">10 个雷</b><small>9 × 9 棋盘</small></div></div><div class="mine-board" id="mineBoard"></div><div class="game-actions"><button class="primary-button" id="newMineGame" type="button">新游戏</button><span>长按或右键插旗</span></div></section>
+        <section class="game-card"><div class="game-card-head"><div><span>06</span><h2>每日猜词</h2><p>六次机会，猜出五个字母的英文单词。</p></div><div><b id="wordleDay">DAY</b><small>每天一词</small></div></div><div class="wordle-grid" id="wordleGrid"></div><form class="wordle-form" id="wordleForm"><input id="wordleInput" maxlength="5" pattern="[A-Za-z]{5}" autocomplete="off" placeholder="输入 5 个字母" aria-label="猜一个五字母英文单词"><button class="primary-button" type="submit">提交</button></form><div class="wordleMessage" id="wordleMessage">绿色位置正确，黄色字母存在但位置不对。</div></section>
+        <section class="game-card"><div class="game-card-head"><div><span>07</span><h2>记忆翻牌</h2><p>翻出两张相同图案，配对全部卡片。</p></div><div><b id="memoryMoves">0 步</b><small>当前步数</small></div></div><div class="memory-board" id="memoryBoard"></div><div class="game-actions"><button class="primary-button" id="newMemoryGame" type="button">重新洗牌</button><span id="memoryStatus">找到全部 8 对</span></div></section>
+        <section class="game-card fun-card"><div class="game-card-head"><div><span>08</span><h2>随机冷知识</h2><p>每次打开一条有趣的小知识。</p></div></div><div class="fun-content"><span>?</span><p id="funFact">点击按钮，看看今天会遇到什么知识。</p></div><button class="primary-button" id="nextFunFact" type="button">换一条</button></section>
+        <section class="game-card fortune-card"><div class="game-card-head"><div><span>09</span><h2>今日趣味卡</h2><p>仅供娱乐，每天生成一张不同的小卡片。</p></div></div><div class="fortune-content" id="fortuneContent"><span id="fortuneIcon">✦</span><h3 id="fortuneTitle">今天适合做什么？</h3><p id="fortuneText">点击抽取今日趣味卡。</p></div><button class="primary-button" id="drawFortune" type="button">抽取今日卡片</button></section>
+      </div>
+    </section>
+
+    <section id="guidesView" class="view" aria-labelledby="guidesTitle">
+      <div class="guide-hero">
+        <div class="guide-hero-copy"><p class="eyebrow">Z GUIDE · 站内完整阅读</p><span class="guide-game-label">燕云十六声 · WHERE WINDS MEET</span><h1 id="guidesTitle">江湖很大，先查攻略再出发。</h1><p>攻略全文已经整理在本站，不需要跳转 GitHub。支持搜索和分类，重点覆盖新手、武学、装备、探索、副本与江湖系统。</p><div class="guide-hero-meta"><span><b id="guideTotal">12</b> 篇攻略</span><span><b>7</b> 个分类</span><span><b>2</b> 个资料来源</span></div><div class="guide-offline-actions"><button id="downloadGuidesOffline" class="guide-offline-button" type="button">↓ 下载离线攻略</button><span><i></i>站内阅读全文 · GitHub 仅作可选来源</span></div></div>
+        <div class="guide-seal" aria-hidden="true"><span>燕云</span><b>十六声</b><small>攻略集</small></div>
+      </div>
+      <section class="guide-toolbar" aria-label="攻略筛选">
+        <label class="guide-search"><span>⌕</span><input id="guideSearch" type="search" placeholder="搜索攻略，例如：心法、偷师、调律、BOSS" aria-label="搜索燕云十六声攻略"></label>
+        <div class="guide-categories" id="guideCategories" role="group" aria-label="攻略分类"></div>
+      </section>
+      <div class="guide-results-head"><div><p class="eyebrow">GUIDE LIBRARY</p><h2 id="guideResultTitle">全部攻略</h2></div><span id="guideResultCount">12 篇</span></div>
+      <div class="guide-grid" id="guideGrid" aria-live="polite"></div>
+      <div class="guide-empty" id="guideEmpty" hidden><span>卷</span><h2>暂时没有匹配的攻略</h2><p>换个关键词，或返回“全部”分类。</p><button class="secondary-button" id="guideReset" type="button">查看全部攻略</button></div>
+      <section class="guide-sources" aria-labelledby="guideSourcesTitle"><div><p class="eyebrow">SOURCES & OFFLINE</p><h2 id="guideSourcesTitle">资料来源与离线说明</h2><p>无需访问 GitHub 即可阅读全文；下方链接只是来源说明。首次联网打开后，浏览器会缓存攻略页；也可以下载单文件攻略，断网后直接双击阅读。游戏更新后请以游戏内为准。</p></div><div class="guide-source-list"><a href="https://github.com/SensorEvolve/where-winds-meet" target="_blank" rel="noopener"><b>SensorEvolve / where-winds-meet</b><span>系统、武学、探索、首领与生活玩法资料库</span><em>可选：查看来源 ↗</em></a><a href="https://github.com/wanda1416/lvjiang/tree/master/docs/10-game" target="_blank" rel="noopener"><b>wanda1416 / lvjiang</b><span>中文装备、词条与调律机制文档 · 非商业许可</span><em>可选：查看来源 ↗</em></a></div></section>
+    </section>
+
+    <section id="lifeView" class="view" aria-labelledby="lifeTitle">
+      <div class="page-head lab-page-head"><div><p class="eyebrow">Z LIFE</p><h1 id="lifeTitle">把零散的小事，收进一个顺手的空间。</h1><p>便签、书签、待办和记账都保存在当前浏览器；图片处理也不会上传服务器。</p></div><span class="local-badge"><i></i>LOCAL ONLY · 本地保存</span></div>
+      <div class="life-grid">
+        <section class="life-card life-note-card"><div class="panel-heading"><div><p class="eyebrow">QUICK NOTE</p><h2>随手便签</h2></div><span id="lifeNoteStatus">已自动保存</span></div><textarea id="lifeNote" rows="10" placeholder="写下临时想法、号码、清单或任何不想忘记的内容……"></textarea></section>
+        <section class="life-card"><div class="panel-heading"><div><p class="eyebrow">BOOKMARKS</p><h2>常用书签</h2></div><span id="bookmarkCount">0 个</span></div><form id="bookmarkForm" class="stack-form"><input id="bookmarkName" maxlength="30" placeholder="名称，例如：GitHub"><input id="bookmarkUrl" type="url" placeholder="https://example.com"><button class="primary-button" type="submit">添加书签</button></form><div class="bookmark-list" id="bookmarkList"></div></section>
+        <section class="life-card"><div class="panel-heading"><div><p class="eyebrow">TO-DO</p><h2>生活待办</h2></div><span id="lifeTodoProgress">0 / 0</span></div><form id="lifeTodoForm" class="inline-form"><input id="lifeTodoInput" maxlength="70" placeholder="今天还要做什么？"><button class="primary-button" type="submit">添加</button></form><div class="life-todo-list" id="lifeTodoList"></div></section>
+        <section class="life-card expense-card"><div class="panel-heading"><div><p class="eyebrow">EXPENSES</p><h2>简单记账</h2></div><b id="expenseTotal">¥0.00</b></div><form id="expenseForm" class="expense-form"><input id="expenseAmount" type="number" min="0.01" step="0.01" placeholder="金额"><select id="expenseCategory"><option>餐饮</option><option>交通</option><option>购物</option><option>学习</option><option>娱乐</option><option>其他</option></select><input id="expenseNote" maxlength="40" placeholder="备注"><button class="primary-button" type="submit">记一笔</button></form><div class="expense-list" id="expenseList"></div></section>
+        <section class="life-card random-lab"><div class="panel-heading"><div><p class="eyebrow">RANDOM LAB</p><h2>随机实验室</h2></div><span>硬币 · 骰子 · 数字</span></div><div class="random-result" id="randomResult">准备好了吗？</div><div class="random-actions"><button type="button" id="flipCoin">抛硬币</button><button type="button" id="rollDice">掷骰子</button></div><div class="random-number-form"><input id="randomMin" type="number" value="1" aria-label="随机数最小值"><span>到</span><input id="randomMax" type="number" value="100" aria-label="随机数最大值"><button class="primary-button" type="button" id="generateRandomNumber">生成随机数</button></div></section>
+        <section class="life-card image-lab"><div class="panel-heading"><div><p class="eyebrow">IMAGE LAB</p><h2>图片压缩与缩放</h2></div><span>浏览器本地处理</span></div><label class="image-drop" for="imageInput"><span>＋</span><b>选择一张图片</b><small>JPG / PNG / WebP</small></label><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden><div class="image-controls"><label>最大宽度<input id="imageMaxWidth" type="number" min="200" max="4000" value="1200"></label><label>质量<input id="imageQuality" type="range" min="40" max="100" value="82"><span id="imageQualityLabel">82%</span></label></div><img id="imagePreview" alt="处理后的图片预览" hidden><div class="game-actions"><button class="primary-button" id="processImage" type="button">开始处理</button><button class="secondary-button" id="downloadImage" type="button" disabled>保存图片</button></div><div class="imageInfo" id="imageInfo">尚未选择图片</div></section>
+        <section class="life-card palette-card"><div class="panel-heading"><div><p class="eyebrow">COLOR PALETTE</p><h2>配色生成器</h2></div><span>点击色块复制色值</span></div><div class="palette-row" id="paletteRow"></div><div class="game-actions"><button class="primary-button" id="generatePalette" type="button">换一组配色</button><span id="paletteStatus">从一个主色生成协调配色</span></div></section>
+        <section class="life-card markdown-card"><div class="panel-heading"><div><p class="eyebrow">MARKDOWN</p><h2>Markdown 实时预览</h2></div><button class="text-link" type="button" id="copyMarkdown">复制原文</button></div><div class="markdown-split"><textarea id="markdownInput" rows="13" placeholder="# 标题&#10;&#10;输入 **Markdown** 内容……"></textarea><article id="markdownPreview" class="markdown-preview"><p>预览会显示在这里。</p></article></div></section>
+      </div>
+    </section>
+
+    <section id="toolsView" class="view" aria-labelledby="toolsTitle">
+      <div class="page-head lab-page-head"><div><p class="eyebrow">Z TOOLBOX</p><h1 id="toolsTitle">一些小工具，解决每天重复的小麻烦。</h1><p>全部在当前浏览器中处理，输入内容不会上传服务器。</p></div><span class="local-badge"><i></i>LOCAL ONLY · 本地处理</span></div>
+      <nav class="tool-index" aria-label="工具箱目录"><span>快速找到工具</span><button type="button" data-tool-anchor="wheelTool">随机转盘</button><button type="button" data-tool-anchor="qrTool">二维码</button><button type="button" data-tool-anchor="countdownTool">倒计时</button><button type="button" data-tool-anchor="jsonTool">JSON</button><button type="button" data-tool-anchor="textStatsTool">文字统计</button><button type="button" data-tool-anchor="timestampTool">时间戳</button><button type="button" data-tool-anchor="codecTool">编解码</button><button type="button" data-tool-anchor="passwordTool">密码生成</button></nav>
+      <div class="tool-grid">
+        <article class="tool-card" id="wheelTool"><header><span>◉</span><div><h2>随机转盘</h2><p>吃什么、选哪个，交给转盘决定</p></div></header><div class="wheel-layout"><div class="choice-wheel" id="choiceWheel"><i></i></div><div class="wheel-settings"><label class="tool-label">选项，每行一个<textarea id="wheelOptions" rows="6">火锅
+烧烤
+面条
+米饭
+轻食
+再想想</textarea></label><div class="wheel-legend" id="wheelLegend" aria-label="颜色与选项对应图例"></div></div></div><footer><button class="primary-button" type="button" id="spinWheel">开始转动</button><b id="wheelResult" role="status" aria-live="polite">等待选择</b></footer></article>
+        <article class="tool-card" id="qrTool"><header><span>▦</span><div><h2>二维码生成器</h2><p>把文字或网址生成二维码</p></div></header><label class="tool-label">输入内容<textarea id="qrInput" rows="4" placeholder="粘贴网址或输入一段文字"></textarea></label><div class="qr-output" id="qrOutput"><span>二维码会显示在这里</span></div><footer><button class="primary-button" type="button" id="generateQr">生成二维码</button><button class="secondary-button" type="button" id="downloadQr">保存图片</button></footer></article>
+        <article class="tool-card tool-wide countdown-card" id="countdownTool"><header><span>⌛</span><div><h2>重要日倒计时</h2><p>记录考试、生日、毕业或任何值得期待的日子</p></div></header><div class="countdown-form"><label>事件名称<input id="countdownName" maxlength="40" placeholder="例如：研究生考试"></label><label>目标日期<input id="countdownDate" type="date"></label><button class="primary-button" type="button" id="saveCountdown">开始倒计时</button></div><div class="countdown-result" id="countdownResult"><span>设置一个目标日期</span><b>—</b><small>日</small></div></article>
+        <article class="tool-card tool-wide" id="jsonTool"><header><span>{ }</span><div><h2>JSON 格式化</h2><p>校验、格式化或压缩 JSON 数据</p></div></header><div class="tool-split"><label>输入<textarea id="jsonInput" rows="9" placeholder='粘贴 JSON，例如：{"name":"Z Lab"}'></textarea></label><label>结果<textarea id="jsonOutput" rows="9" readonly placeholder="格式化结果会显示在这里"></textarea></label></div><footer><button class="primary-button" type="button" id="formatJson">格式化</button><button class="secondary-button" type="button" id="minifyJson">压缩</button><button class="text-link" type="button" data-copy-target="jsonOutput">复制结果</button><span id="jsonStatus">等待输入</span></footer></article>
+        <article class="tool-card" id="textStatsTool"><header><span>Aa</span><div><h2>文字统计</h2><p>实时统计字符、词语与行数</p></div></header><label class="tool-label">输入文字<textarea id="textStatsInput" rows="7" placeholder="在这里输入或粘贴文字"></textarea></label><div class="text-stat-grid"><span><b id="statChars">0</b>字符</span><span><b id="statNoSpace">0</b>不含空格</span><span><b id="statWords">0</b>词语</span><span><b id="statLines">0</b>行</span></div></article>
+        <article class="tool-card" id="timestampTool"><header><span>⌚</span><div><h2>时间戳转换</h2><p>时间戳与日期互相转换</p></div></header><label class="tool-label">时间戳或日期<input id="timestampInput" placeholder="例如：1787587200 或 2026-08-25"></label><div class="tool-result" id="timestampOutput">等待输入</div><footer><button class="primary-button" type="button" id="convertTimestamp">转换</button><button class="secondary-button" type="button" id="currentTimestamp">当前时间</button></footer></article>
+        <article class="tool-card" id="codecTool"><header><span>⇄</span><div><h2>文本编解码</h2><p>Base64 与 URL 编解码</p></div></header><label class="tool-label">处理方式<select id="codecMode"><option value="base64Encode">Base64 编码</option><option value="base64Decode">Base64 解码</option><option value="urlEncode">URL 编码</option><option value="urlDecode">URL 解码</option></select></label><label class="tool-label">输入<textarea id="codecInput" rows="4" placeholder="输入需要处理的内容"></textarea></label><label class="tool-label">结果<textarea id="codecOutput" rows="3" readonly></textarea></label><footer><button class="primary-button" type="button" id="runCodec">开始处理</button><button class="text-link" type="button" data-copy-target="codecOutput">复制</button></footer></article>
+        <article class="tool-card" id="passwordTool"><header><span>✦</span><div><h2>随机密码生成器</h2><p>使用浏览器安全随机数生成</p></div></header><label class="tool-label">密码长度 <b id="passwordLengthLabel">16</b><input id="passwordLength" type="range" min="8" max="40" value="16"></label><div class="password-options"><label><input id="passwordNumbers" type="checkbox" checked>数字</label><label><input id="passwordSymbols" type="checkbox" checked>符号</label></div><div class="password-output"><input id="passwordOutput" readonly aria-label="生成的密码"><button type="button" data-copy-target="passwordOutput">复制</button></div><footer><button class="primary-button" type="button" id="generatePassword">生成新密码</button><span id="passwordStrength">等待生成</span></footer></article>
+      </div>
+    </section>
+
+    <nav class="career-subnav" id="careerSubnav" aria-label="职达求职模块" hidden><div class="career-subnav-title"><span>职达 Career Studio</span><b>求职工具快速切换</b></div><button type="button" data-career-view="resume"><i>01</i><span><b>简历制作</b><small>模板、资料导入与 PDF</small></span></button><button type="button" data-career-view="jobs"><i>02</i><span><b>岗位搜索</b><small>在线岗位库与匹配分析</small></span></button><button type="button" data-career-view="tracker"><i>03</i><span><b>投递管理</b><small>进度、备注与记录导出</small></span></button></nav>
+
+    <section id="resumeView" class="view" aria-labelledby="resumeTitle">
+      <div class="page-head">
+        <div><p class="eyebrow">RESUME WORKSPACE</p><h1 id="resumeTitle">把经历，写成你的竞争力。</h1><p>选择模板，左侧修改，右侧实时预览。资料只保存在当前浏览器。</p></div>
+        <div class="head-actions">
+          <div class="save-pill resume-save-pill"><span></span><b id="saveStatus">已自动保存</b></div>
+          <select class="version-select" id="resumeVersionSelect" aria-label="简历版本"><option value="current">当前简历</option></select>
+          <button class="secondary-button" id="saveVersionButton">保存为新版本</button>
+          <button class="secondary-button" id="sampleButton">填入示例</button>
+          <button class="secondary-button" id="backupButton">保存副本</button>
+          <button class="secondary-button import-trigger" id="importButton">上传资料生成简历</button>
+          <button class="primary-button" id="printButton">导出 PDF</button>
+        </div>
+      </div>
+
+      <section class="template-studio" aria-labelledby="templateTitle">
+        <div class="template-copy"><span>模板中心</span><h2 id="templateTitle">先选一份适合你的简历</h2><p>版式可随时更换，已填写的内容不会丢失。</p></div>
+        <div class="template-options" role="radiogroup" aria-label="简历模板">
+          <button class="template-option active" type="button" data-template="ats" role="radio" aria-checked="true"><span class="template-thumb thumb-ats"><i></i><i></i><i></i></span><b>清晰通用</b><small>结构规整 · 招聘系统友好</small></button>
+          <button class="template-option" type="button" data-template="modern" role="radio" aria-checked="false"><span class="template-thumb thumb-modern"><i></i><i></i><i></i></span><b>现代职场</b><small>视觉突出 · 适合社招</small></button>
+          <button class="template-option" type="button" data-template="campus" role="radio" aria-checked="false"><span class="template-thumb thumb-campus"><i></i><i></i><i></i></span><b>校园新锐</b><small>教育前置 · 适合校招</small></button>
+          <button class="template-option" type="button" data-template="minimal" role="radio" aria-checked="false"><span class="template-thumb thumb-minimal"><i></i><i></i><i></i></span><b>极简黑白</b><small>克制清爽 · 通用岗位</small></button>
+          <button class="template-option" type="button" data-template="executive" role="radio" aria-checked="false"><span class="template-thumb thumb-executive"><i></i><i></i><i></i></span><b>资深管理</b><small>稳重专业 · 管理岗位</small></button>
+          <button class="template-option" type="button" data-template="tech" role="radio" aria-checked="false"><span class="template-thumb thumb-tech"><i></i><i></i><i></i></span><b>科技蓝图</b><small>理性清晰 · 技术岗位</small></button>
+          <button class="template-option" type="button" data-template="creative" role="radio" aria-checked="false"><span class="template-thumb thumb-creative"><i></i><i></i><i></i></span><b>创意双栏</b><small>个性鲜明 · 设计运营</small></button>
+          <button class="template-option" type="button" data-template="warm" role="radio" aria-checked="false"><span class="template-thumb thumb-warm"><i></i><i></i><i></i></span><b>暖调人文</b><small>亲和自然 · 教育内容</small></button>
+        </div>
+        <label class="accent-picker">主题色<input type="color" id="accentColor" value="#285f4c" aria-label="选择简历主题色"></label>
+      </section>
+
+      <div class="resume-workspace">
+        <form class="editor-card" id="resumeForm" autocomplete="on">
+          <div class="editor-heading"><div><span class="section-index">01</span><h2>编辑简历</h2></div><div class="score-badge"><b id="scoreNumber">0</b><span>完成度</span></div></div>
+          <div class="writing-tip" id="writingTip"><b>填写建议</b><span>成果建议使用“动作 + 数据 + 结果”，更容易被招聘者快速看懂。</span></div>
+
+          <details open>
+            <summary>基本信息 <span>联系方式与求职方向</span></summary>
+            <div class="form-grid">
+              <label>姓名<input id="name" name="name" placeholder="你的姓名"></label>
+              <label>目标职位<input id="role" name="role" placeholder="例如：产品经理"></label>
+              <label>手机<input id="phone" name="phone" inputmode="tel" placeholder="138 0000 0000"></label>
+              <label>邮箱<input id="email" name="email" type="email" placeholder="hello@example.com"></label>
+              <label>所在城市<input id="location" name="location" placeholder="上海"></label>
+              <label>工作年限 / 届别<input id="years" name="years" placeholder="3 年经验 / 2027 届"></label>
+              <label class="wide">个人主页 / 作品集<input id="website" name="website" placeholder="portfolio.example.com（选填）"></label>
+            </div>
+          </details>
+
+          <details open>
+            <summary>个人优势 <span>突出能力与量化成果</span></summary>
+            <label>优势概述<textarea id="summary" name="summary" rows="4" maxlength="320" placeholder="建议 60–120 字，说明领域、能力与代表成果"></textarea><small class="field-hint"><span id="summaryCount">0</span>/320</small></label>
+            <label>核心技能<input id="skills" name="skills" placeholder="用逗号分隔，如：用户研究, 数据分析"></label>
+          </details>
+
+          <details open>
+            <summary>工作 / 实习经历 <span>按时间倒序填写</span></summary>
+            <h3 class="entry-label">经历一</h3>
+            <div class="form-grid">
+              <label>公司<input id="company" name="company" placeholder="公司名称"></label>
+              <label>职位<input id="jobTitle" name="jobTitle" placeholder="职位名称"></label>
+              <label class="wide">任职时间<input id="jobPeriod" name="jobPeriod" placeholder="2023.07 — 至今"></label>
+              <label class="wide">工作成果<textarea id="highlights" name="highlights" rows="4" placeholder="每行一条；尽量使用动作 + 数据 + 结果"></textarea></label>
+            </div>
+            <h3 class="entry-label second-entry">经历二 <span>选填</span></h3>
+            <div class="form-grid">
+              <label>公司<input id="company2" name="company2" placeholder="公司名称"></label>
+              <label>职位<input id="jobTitle2" name="jobTitle2" placeholder="职位名称"></label>
+              <label class="wide">任职时间<input id="jobPeriod2" name="jobPeriod2" placeholder="2022.06 — 2023.06"></label>
+              <label class="wide">工作成果<textarea id="highlights2" name="highlights2" rows="3" placeholder="每行一条工作成果"></textarea></label>
+            </div>
+            <div class="extra-editor-list" id="extraWorkEditors"></div>
+            <button class="add-entry-button" type="button" data-add-entry="works"><span>＋</span>添加一段工作 / 实习经历</button>
+          </details>
+
+          <details open>
+            <summary>项目经历 <span>作品、课程或业务项目</span></summary>
+            <div class="form-grid">
+              <label>项目名称<input id="projectName" name="projectName" placeholder="项目名称"></label>
+              <label>担任角色<input id="projectRole" name="projectRole" placeholder="项目负责人"></label>
+              <label class="wide">项目时间<input id="projectPeriod" name="projectPeriod" placeholder="2024.03 — 2024.06"></label>
+              <label class="wide">项目成果<textarea id="projectHighlights" name="projectHighlights" rows="3" placeholder="每行一条，写清问题、行动和结果"></textarea></label>
+            </div>
+            <div class="extra-editor-list" id="extraProjectEditors"></div>
+            <button class="add-entry-button" type="button" data-add-entry="projects"><span>＋</span>添加一段项目经历</button>
+          </details>
+
+          <details open>
+            <summary>教育经历 <span>学校、专业与在校表现</span></summary>
+            <div class="form-grid">
+              <label>学校<input id="school" name="school" placeholder="学校名称"></label>
+              <label>专业 / 学历<input id="degree" name="degree" placeholder="信息管理 · 本科"></label>
+              <label>就读时间<input id="eduPeriod" name="eduPeriod" placeholder="2019.09 — 2023.06"></label>
+              <label>成绩 / 排名<input id="gpa" name="gpa" placeholder="GPA 3.8 / 专业前 10%"></label>
+              <label class="wide">主修课程 / 校园经历<textarea id="eduHighlights" name="eduHighlights" rows="3" placeholder="选填，每行一条"></textarea></label>
+            </div>
+            <div class="extra-editor-list" id="extraEducationEditors"></div>
+            <button class="add-entry-button" type="button" data-add-entry="educations"><span>＋</span>添加一段教育经历</button>
+          </details>
+
+          <details>
+            <summary>证书与语言 <span>选填，加分信息</span></summary>
+            <label>证书 / 奖项<input id="certificates" name="certificates" placeholder="PMP, 数据分析师, 国家奖学金"></label>
+            <label>语言能力<input id="languages" name="languages" placeholder="英语 CET-6, 普通话二级甲等"></label>
+          </details>
+
+          <div class="editor-footer"><button type="button" class="text-button" id="clearButton">清空全部内容</button><span>自动保存 · 输入即预览</span></div>
+        </form>
+
+        <section class="preview-wrap" aria-label="简历预览">
+          <div class="preview-label"><span>实时预览 · <b id="activeTemplateName">清晰通用</b></span><small>A4 · 适合打印</small></div>
+          <article class="resume-paper template-ats" id="resumePaper">
+            <header class="paper-header">
+              <div><span class="paper-kicker" id="previewRoleEn">CAREER PROFILE</span><h2 id="previewName">你的姓名</h2><p id="previewMeta">目标职位 · 工作年限 · 所在城市</p></div>
+              <div class="monogram" id="previewMonogram">你</div>
+            </header>
+            <div class="contact-row"><span id="previewPhone">手机号码</span><i></i><span id="previewEmail">邮箱地址</span><i id="websiteDot"></i><span id="previewWebsite">个人主页</span></div>
+            <section class="paper-section summary-section"><div class="paper-title"><span>01</span><h3>个人优势</h3></div><p id="previewSummary">在左侧填写个人优势，这里会实时生成你的简历内容。</p><div class="skill-list" id="previewSkills"></div></section>
+            <section class="paper-section work-section"><div class="paper-title"><span>02</span><h3>工作 / 实习经历</h3></div><div class="resume-entry"><div class="experience-head"><div><b id="previewCompany">公司名称</b><p id="previewJobTitle">职位名称</p></div><time id="previewJobPeriod">任职时间</time></div><ul id="previewHighlights"><li>在左侧补充可量化的工作成果。</li></ul></div><div class="resume-entry optional-entry" id="previewWork2"><div class="experience-head"><div><b id="previewCompany2"></b><p id="previewJobTitle2"></p></div><time id="previewJobPeriod2"></time></div><ul id="previewHighlights2"></ul></div><div id="previewExtraWorks"></div></section>
+            <section class="paper-section project-section" id="projectSection"><div class="paper-title"><span>03</span><h3>项目经历</h3></div><div class="resume-entry"><div class="experience-head"><div><b id="previewProjectName">项目名称</b><p id="previewProjectRole">担任角色</p></div><time id="previewProjectPeriod">项目时间</time></div><ul id="previewProjectHighlights"><li>在左侧填写有代表性的项目成果。</li></ul></div><div id="previewExtraProjects"></div></section>
+            <section class="paper-section education-section" id="educationSection"><div class="paper-title"><span>04</span><h3>教育经历</h3></div><div class="resume-entry"><div class="experience-head"><div><b id="previewSchool">学校名称</b><p id="previewDegree">专业 · 学历</p></div><time id="previewEduPeriod">就读时间</time></div><p class="gpa-line" id="previewGpa"></p><ul id="previewEduHighlights"></ul></div><div id="previewExtraEducations"></div></section>
+            <section class="paper-section extras-section" id="extrasSection"><div class="paper-title"><span>05</span><h3>证书与语言</h3></div><div class="extras-grid"><p><b>证书 / 奖项</b><span id="previewCertificates"></span></p><p><b>语言能力</b><span id="previewLanguages"></span></p></div></section>
+          </article>
+        </section>
+      </div>
+    </section>
+
+    <section id="jobsView" class="view" aria-labelledby="jobsTitle">
+      <div class="page-head jobs-head">
+        <div><p class="eyebrow">JOB RADAR</p><h1 id="jobsTitle">找到与你真正匹配的岗位。</h1><p>根据关键词、城市和经历筛选，并结合简历技能计算匹配度。</p></div>
+        <div class="resume-signal"><span>简历画像</span><b id="signalRole">尚未设置目标职位</b><small id="signalSkills">填写简历后匹配更准确</small></div>
+      </div>
+
+      <div class="job-search-card">
+        <form id="jobSearchForm" class="job-search-form">
+          <label class="search-field"><span>⌕</span><input id="jobKeyword" placeholder="搜索岗位、技能或公司" value="产品经理" aria-label="岗位关键词"></label>
+          <label><span>省份 / 地区</span><select id="provinceFilter"><option value="all">全国</option></select></label>
+          <label><span>城市</span><select id="cityFilter"><option value="all">全部城市</option></select></label>
+          <label><span>企业类型</span><select id="companyTypeFilter"><option value="all">全部类型</option></select></label>
+          <label><span>招聘批次</span><select id="batchFilter"><option value="all">全部批次</option><option>实习</option><option>秋招</option><option>春招</option><option>校招</option></select></label>
+          <label><span>招聘对象</span><select id="audienceFilter"><option value="all">全部对象</option><option>2027届</option><option>本科</option><option>硕士</option><option>博士</option></select></label>
+          <button class="primary-button" type="submit">开始检索</button>
+        </form>
+        <div class="platform-row"><span>更多岗位入口</span><a href="https://www.zhipin.com/" target="_blank" rel="noreferrer">BOSS 直聘 ↗</a><a href="https://www.liepin.com/" target="_blank" rel="noreferrer">猎聘 ↗</a><a href="https://www.zhaopin.com/" target="_blank" rel="noreferrer">智联招聘 ↗</a><small id="dataSourceStatus">正在同步腾讯与飞书岗位表格…</small></div>
+      </div>
+
+      <div class="results-toolbar"><div><b id="resultCount">0 个匹配岗位</b><span id="resultSummary">正在读取在线岗位库</span></div><label>排序<select id="sortFilter"><option value="match">匹配度优先</option><option value="updated">最近更新</option><option value="company">公司名称</option></select></label></div>
+      <div class="job-grid" id="jobGrid" aria-live="polite"></div>
+      <button class="load-more" id="loadMore" hidden>加载更多岗位</button>
+      <div class="empty-state" id="emptyState" hidden><span>⌕</span><h2>没有找到完全匹配的岗位</h2><p>试试缩短关键词，或放宽省份、城市、企业类型和批次筛选。</p><button class="secondary-button" id="resetFilters">重置筛选</button></div>
+    </section>
+
+    <section id="trackerView" class="view" aria-labelledby="trackerTitle">
+      <div class="page-head tracker-head">
+        <div><p class="eyebrow">APPLICATION TRACKER</p><h1 id="trackerTitle">把每一次机会，都推进到下一步。</h1><p>收藏岗位后记录投递状态、面试进度和备注，数据只保存在当前浏览器。</p></div>
+        <button class="secondary-button" id="exportTracker">导出求职记录</button>
+      </div>
+      <div class="tracker-stats">
+        <article><span>全部机会</span><b id="statAll">0</b><small>已收藏岗位</small></article>
+        <article><span>已经投递</span><b id="statApplied">0</b><small>进入求职流程</small></article>
+        <article><span>面试阶段</span><b id="statInterview">0</b><small>待准备与跟进</small></article>
+        <article><span>收到 Offer</span><b id="statOffer">0</b><small>阶段转化结果</small></article>
+      </div>
+      <div class="tracker-toolbar"><label class="search-field"><span>⌕</span><input id="trackerSearch" placeholder="搜索公司或岗位" aria-label="搜索求职记录"></label><span id="trackerPrivacy">本地保存 · 仅你可见</span></div>
+      <div class="tracker-board" id="trackerBoard">
+        <section class="tracker-column" data-status="saved"><header><span></span><b>已收藏</b><i id="countSaved">0</i></header><div class="tracker-list" id="listSaved"></div></section>
+        <section class="tracker-column" data-status="applied"><header><span></span><b>已投递</b><i id="countApplied">0</i></header><div class="tracker-list" id="listApplied"></div></section>
+        <section class="tracker-column" data-status="interview"><header><span></span><b>面试中</b><i id="countInterview">0</i></header><div class="tracker-list" id="listInterview"></div></section>
+        <section class="tracker-column" data-status="offer"><header><span></span><b>Offer</b><i id="countOffer">0</i></header><div class="tracker-list" id="listOffer"></div></section>
+        <section class="tracker-column" data-status="closed"><header><span></span><b>已结束</b><i id="countClosed">0</i></header><div class="tracker-list" id="listClosed"></div></section>
+      </div>
+      <div class="tracker-empty" id="trackerEmpty"><span>☆</span><h2>还没有收藏岗位</h2><p>去岗位雷达找到感兴趣的机会，点击“收藏岗位”就会出现在这里。</p><button class="primary-button" type="button" data-go-view="jobs">去找岗位</button></div>
+    </section>
+
+    <section id="aboutView" class="view" aria-labelledby="aboutTitle">
+      <div class="about-hero"><p class="eyebrow">ABOUT Z LAB</p><h1 id="aboutTitle">这是我的个人开发空间，也是一组真正可以使用的功能。</h1><p>Z Lab 不限定为某一种网站。我会把日常遇到的真实需求做成可以直接使用的工具，职达求职和开发者工具箱也会继续更新。</p><div class="about-actions"><button class="primary-button" data-go-view="home">返回首页</button><button class="secondary-button" data-go-view="tools">使用工具箱</button></div></div>
+      <div class="project-flow" aria-label="开发流程"><article><span>01</span><b>发现问题</b><p>从自己真实遇到的麻烦出发。</p></article><i>→</i><article><span>02</span><b>做出原型</b><p>先完成一条可运行的核心路径。</p></article><i>→</i><article><span>03</span><b>上线使用</b><p>让功能在真实环境中持续运行。</p></article><i>→</i><article><span>04</span><b>继续更新</b><p>根据新的问题逐步完善体验。</p></article></div>
+      <div class="about-grid"><article><p class="eyebrow">USEFUL FIRST</p><h2>为什么做这个网站？</h2><p>我希望这里不只是一个展示页面，而是拥有公开地址、真实功能，并且可以被别人直接使用的网站。</p></article><article><p class="eyebrow">PRIVACY FIRST</p><h2>数据如何处理？</h2><p>学习记录、工具箱输入、简历内容和投递记录优先保存在用户自己的浏览器，不会作为个人资料上传到服务器。</p></article><article><p class="eyebrow">ALWAYS BUILDING</p><h2>接下来会做什么？</h2><p>继续完善学习、娱乐、开发工具和跨设备数据能力，让 Z Lab 逐步变成真正实用的个人数字工作台。</p></article></div>
+      <div class="version-note"><span>当前功能</span><b>Z Lab</b><p>学习空间 · 娱乐空间 · 生活空间 · 日常工具 · 职达求职</p></div>
+    </section>
+  </main>
+
+  <nav class="mobile-dock" aria-label="手机快捷导航"><button type="button" data-mobile-view="home"><i>⌂</i><span>首页</span></button><button type="button" data-mobile-view="study"><i>25</i><span>学习</span></button><button type="button" data-mobile-view="play"><i>▦</i><span>娱乐</span></button><button type="button" data-mobile-view="guides"><i>燕</i><span>攻略</span></button><button type="button" data-mobile-view="life"><i>☰</i><span>生活</span></button><button type="button" data-mobile-view="resume"><i>文</i><span>简历</span></button><button type="button" data-mobile-view="jobs"><i>⌕</i><span>岗位</span></button></nav>
+
+  <dialog id="functionDialog" class="function-dialog" aria-labelledby="functionDialogTitle">
+    <button class="dialog-close" id="functionDialogClose" aria-label="关闭">×</button>
+    <div class="function-dialog-head"><p class="eyebrow">ALL FEATURES</p><h2 id="functionDialogTitle">你想去哪里？</h2><p>学习、娱乐、工具和求职功能都在这里。</p></div>
+    <div class="function-dialog-grid">
+      <section><header><i>01</i><div><span>学习与娱乐</span><b>专注，也要放松</b></div></header><button type="button" data-overview-view="study"><span>学习空间</span><small>番茄钟、卡片、题目与错题</small></button><button type="button" data-overview-view="play"><span>娱乐空间</span><small>九种小游戏和趣味内容</small></button><button type="button" data-overview-view="guides"><span>游戏攻略库</span><small>燕云十六声新手、武学与装备</small></button><button type="button" data-overview-view="life"><span>生活空间</span><small>便签、书签、待办与记账</small></button><button type="button" data-overview-view="home"><span>首页</span><small>全部功能入口</small></button><button type="button" data-overview-view="about"><span>关于 Z Lab</span><small>用途、隐私与后续计划</small></button></section>
+      <section><header><i>02</i><div><span>日常工具</span><b>浏览器本地处理</b></div></header><button type="button" data-overview-view="tools" data-tool-anchor="wheelTool"><span>随机转盘</span><small>帮你快速做决定</small></button><button type="button" data-overview-view="tools" data-tool-anchor="qrTool"><span>二维码生成</span><small>文字与网址转二维码</small></button><button type="button" data-overview-view="tools" data-tool-anchor="countdownTool"><span>重要日倒计时</span><small>记录值得期待的日期</small></button><button type="button" data-overview-view="tools" data-tool-anchor="jsonTool"><span>JSON 格式化</span><small>校验、格式化、压缩</small></button><button type="button" data-overview-view="tools" data-tool-anchor="textStatsTool"><span>文字统计</span><small>字符、词语与行数</small></button><button type="button" data-overview-view="tools"><span>查看全部工具</span><small>时间戳、编解码与密码</small></button></section>
+      <section class="career-dialog-group"><header><i>03</i><div><span>求职工具</span><b>完整求职工作流</b></div></header><button type="button" data-overview-view="resume"><span>简历制作</span><small>模板、导入与 PDF</small></button><button type="button" data-overview-view="jobs"><span>岗位搜索</span><small>在线岗位库与匹配</small></button><button type="button" data-overview-view="tracker"><span>投递管理</span><small>收藏、面试与 Offer</small></button></section>
+    </div>
+  </dialog>
+
+  <dialog id="importDialog" class="import-dialog">
+    <button class="dialog-close" id="importClose" aria-label="关闭">×</button>
+    <div class="import-head"><span>SMART IMPORT</span><h2>上传个人资料，自动生成简历</h2><p>支持 Word、PDF、TXT、Markdown 和本站 JSON 副本。文件仅在你的浏览器中解析，不会上传服务器。</p></div>
+    <div class="import-methods">
+      <label class="drop-zone" id="resumeDropZone" for="resumeImport"><span>⇧</span><b>点击选择或拖入文件</b><small>DOCX / PDF / TXT / MD / JSON，最大 10MB</small></label>
+      <input id="resumeImport" type="file" accept=".docx,.pdf,.txt,.md,.json,application/pdf,application/json" hidden>
+      <div class="import-divider"><span>或者粘贴资料</span></div>
+      <textarea id="resumeRawText" rows="9" placeholder="例如：&#10;姓名：张三&#10;求职意向：产品经理&#10;电话：138...&#10;教育经历：...&#10;工作经历：...&#10;项目经历：..."></textarea>
+    </div>
+    <div class="parse-preview" id="parsePreview" hidden><b>已识别内容</b><span id="parseSummary"></span></div>
+    <div class="import-actions"><button class="secondary-button" type="button" id="pasteSample">查看填写示例</button><button class="primary-button" type="button" id="generateResume">识别并生成简历</button></div>
+  </dialog>
+  <dialog id="guideDialog" class="guide-dialog"><button class="dialog-close" id="guideDialogClose" aria-label="关闭">×</button><div id="guideDialogContent"></div></dialog>
+  <dialog id="jobDialog" class="job-dialog"><button class="dialog-close" id="dialogClose" aria-label="关闭">×</button><div id="dialogContent"></div></dialog>
+  <dialog id="applicationConfirm" class="application-confirm">
+    <button class="dialog-close" id="applicationConfirmClose" aria-label="关闭">×</button>
+    <span class="confirm-icon">✓</span>
+    <p class="eyebrow">APPLICATION CHECK</p>
+    <h2>刚才的岗位投递完成了吗？</h2>
+    <p id="applicationConfirmJob">确认后会把岗位移动到“已投递”，未完成则继续留在“已收藏”。</p>
+    <div class="confirm-actions"><button class="secondary-button" id="applicationNotDone" type="button">还没有，先保留</button><button class="primary-button" id="applicationDone" type="button">已经完成投递</button></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="vendor/mammoth.browser.min.js?v=1.8.0" defer></script>
+  <script src="vendor/pdf.min.js?v=3.11.174" defer></script>
+  <script src="vendor/qrcode.min.js?v=1.0.0" defer></script>
+  <script src="data/yysls-guides.js?v=20260825-project22" defer></script>
+  <script src="app.js?v=20260825-project22" defer></script>
+</body>
+</html>

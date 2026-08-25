@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+:root { --ink:#182026; --muted:#7a817f; --line:#e2e6e1; --paper:#fff; --green:#285f4c; --lime:#d9eea5; --cream:#f4f1e9; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:#eef0eb; color:var(--ink); font-family:Arial,"Microsoft YaHei",sans-serif; }
+button,input { font:inherit; }
+button,a { -webkit-tap-highlight-color:transparent; }
+button { cursor:pointer; }
+.app-shell { min-height:100vh; background:radial-gradient(circle at 50% 0,#fafbf6 0,#eef0eb 46%,#e8ebe5 100%); }
+.topbar { height:72px; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(24px,5vw,72px); border-bottom:1px solid rgba(34,58,48,.11); background:rgba(250,251,247,.88); backdrop-filter:blur(18px); position:sticky; top:0; z-index:10; }
+.brand { color:var(--ink); text-decoration:none; display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; }
+.brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; color:white; background:var(--green); font-family:Georgia,serif; }
+.brand small { color:#8a918c; font-size:9px; letter-spacing:.18em; font-weight:700; margin-left:-5px; align-self:flex-end; margin-bottom:14px; }
+.topbar nav { display:flex; align-items:center; gap:34px; height:100%; }
+.topbar nav a { height:100%; display:flex; align-items:center; color:#737b77; text-decoration:none; font-size:14px; position:relative; }
+.topbar nav a.active { color:var(--green); font-weight:700; }
+.topbar nav a.active:after { content:""; height:3px; border-radius:3px; background:var(--green); position:absolute; inset:auto 3px -1px; }
+.header-actions { display:flex; gap:10px; }
+.icon-button,.avatar { border:0; width:36px; height:36px; border-radius:50%; }
+.icon-button { background:transparent; color:#a9b1ac; font-size:10px; }
+.avatar { color:white; background:#263d35; font-size:13px; }
+.workspace-head { max-width:1500px; margin:0 auto; padding:40px clamp(24px,5vw,72px) 28px; display:flex; align-items:flex-end; justify-content:space-between; gap:30px; }
+.eyebrow { color:#718077; letter-spacing:.15em; font-size:10px; font-weight:800; margin:0 0 9px; }
+.workspace-head h1 { margin:0; font-family:Georgia,"Noto Serif SC",serif; font-size:clamp(25px,3vw,40px); font-weight:500; letter-spacing:-.03em; }
+.score-card { min-width:300px; display:flex; align-items:center; gap:14px; padding:12px 16px; background:rgba(255,255,255,.62); border:1px solid rgba(40,95,76,.12); border-radius:18px; }
+.score-ring { width:54px; height:54px; border-radius:50%; display:grid; place-content:center; text-align:center; background:conic-gradient(var(--green) 0 82%,#dfe4dc 82%); position:relative; }
+.score-ring:before { content:""; position:absolute; inset:5px; border-radius:50%; background:#fff; }
+.score-ring strong,.score-ring span { position:relative; line-height:1; }.score-ring strong{font-size:17px}.score-ring span{font-size:9px;color:#87908b;margin-top:2px}
+.score-card b,.score-card small { display:block; }.score-card b{font-size:13px;margin-bottom:5px}.score-card small{font-size:11px;color:#8a928e}
+.dashboard-grid { max-width:1500px; margin:0 auto; padding:0 clamp(24px,5vw,72px) 56px; display:grid; grid-template-columns:minmax(0,1.65fr) minmax(320px,.72fr); gap:20px; }
+.resume-panel,.job-panel { border:1px solid rgba(40,62,53,.12); background:rgba(255,255,255,.76); border-radius:24px; box-shadow:0 18px 60px rgba(31,52,43,.07); overflow:hidden; }
+.panel-toolbar { height:66px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 22px; }
+.panel-toolbar>div:first-child { display:flex; align-items:center; gap:9px; }.panel-toolbar b{font-size:13px}.panel-toolbar small{font-size:10px;color:#9ba19e;margin-left:4px}
+.status-dot { width:8px;height:8px;border-radius:50%;background:#76a46c;box-shadow:0 0 0 4px #edf5e9; }
+.toolbar-actions { display:flex;gap:8px }.ghost-button,.primary-button { border-radius:9px;padding:8px 13px;font-size:11px;font-weight:700}.ghost-button{border:1px solid #dfe3df;background:white;color:#535d58}.primary-button{border:1px solid var(--green);background:var(--green);color:white}
+.resume-canvas { min-height:655px; display:grid; grid-template-columns:150px minmax(0,1fr); }
+.resume-nav { padding:20px 12px; border-right:1px solid var(--line); background:#f8f8f4; }
+.resume-nav button { width:100%; text-align:left; border:0; color:#747b77; background:transparent; padding:11px 10px; border-radius:9px; font-size:11px; margin-bottom:3px; }
+.resume-nav button span { color:#adb3af;font-size:9px;margin-right:8px }.resume-nav button.selected{background:#e8efe7;color:var(--green);font-weight:800}.resume-nav button.selected span{color:#5d8877}.resume-nav .add-section{border:1px dashed #cfd5cf;text-align:center;margin-top:12px;color:#6f7b75}
+.resume-paper { width:min(100% - 48px,720px); min-height:600px; margin:26px auto; background:white; box-shadow:0 7px 30px rgba(23,36,30,.09); padding:42px clamp(28px,5vw,56px); }
+.resume-name-row { display:flex; justify-content:space-between; gap:20px; align-items:center; }.resume-role{font:700 9px Arial;letter-spacing:.18em;color:#6f8b7e}.resume-name-row h2{font:500 34px Georgia,"Noto Serif SC",serif;margin:7px 0}.resume-name-row p{font-size:11px;color:#737c77;margin:0}.photo-placeholder{width:70px;height:82px;background:#f0f2ee;color:#a4aba7;font-size:9px;display:grid;place-items:center;text-align:center}
+.contact-line { display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:27px 0 32px;padding:10px 0;border-block:1px solid #e8eae7;font-size:9px;color:#6f7773}.contact-line i{width:2px;height:2px;border-radius:50%;background:#98a09c}
+.resume-section { margin-top:26px; }.section-title{display:flex;align-items:center;border-bottom:1px solid #dfe4df;padding-bottom:8px;margin-bottom:12px}.section-title>span{font:700 9px Arial;color:#6d887d;margin-right:10px}.section-title h3{font-size:13px;margin:0;letter-spacing:.08em}.section-title button{margin-left:auto;border:0;background:transparent;color:#7b9c8e;font-size:9px}.resume-section>p{font-size:10px;line-height:1.9;color:#59625e;margin:0}.skill-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.skill-list span,.job-tags span{background:#eff3ed;color:#496458;padding:5px 8px;border-radius:5px;font-size:8px}.experience-row{display:flex;justify-content:space-between}.experience-row b{font-size:11px}.experience-row p,.experience-row time{font-size:9px;color:#79817d}.resume-section ul{padding-left:15px;margin:8px 0;color:#606963;font-size:9px;line-height:1.8}
+.job-panel { padding:24px; align-self:start; }.job-heading{display:flex;justify-content:space-between;align-items:center}.job-heading h2{margin:0;font:500 26px Georgia,"Noto Serif SC",serif}.job-heading>span{font-size:9px;padding:6px 8px;border-radius:20px;color:#805d35;background:#f5ead6}.search-box{height:46px;border:1.5px solid #9db2a8;background:white;border-radius:12px;margin:22px 0 10px;padding:4px 4px 4px 13px;display:flex;align-items:center;gap:8px}.search-box input{min-width:0;flex:1;border:0;outline:0;font-size:12px}.search-box button{border:0;background:var(--green);color:white;border-radius:8px;padding:9px 14px;font-size:10px}.filter-row{display:flex;gap:7px;margin-bottom:18px}.filter-row button{border:1px solid #dfe3df;background:#f9faf7;color:#66706b;padding:6px 9px;border-radius:7px;font-size:9px}.match-card{border:1px solid #e1e5e0;border-radius:15px;padding:16px;margin-top:10px;background:white}.match-card.featured{border-color:#adc3b8;box-shadow:0 8px 22px rgba(45,86,68,.08)}.job-top{display:flex;align-items:center;gap:10px}.company-logo{width:35px;height:35px;border-radius:9px;display:grid;place-items:center;color:white;font:bold 13px Georgia}.company-logo.purple{background:#514778}.company-logo.orange{background:#b77744}.job-top h3{font-size:12px;margin:0 0 4px}.job-top p{font-size:9px;color:#8b928f;margin:0}.job-top strong{margin-left:auto;color:#2c6b54;font-size:11px}.match-score{margin:14px 0 10px;padding:9px 10px;border-radius:8px;background:#eff5e9;display:flex;justify-content:space-between}.match-score span{color:#4d785e;font-size:9px;font-weight:800}.match-score small{font-size:8px;color:#829084}.job-tags{display:flex;gap:6px}.view-job{width:100%;display:flex;justify-content:space-between;border:0;border-top:1px solid #edf0ec;background:transparent;margin-top:14px;padding:12px 0 0;text-align:left;font-size:9px;color:#52635b}.all-jobs{width:100%;border:0;background:transparent;color:#375f4f;font-size:10px;font-weight:700;padding:18px 0 2px}.all-jobs span{float:right}
+@media(max-width:980px){.topbar nav{display:none}.workspace-head{align-items:flex-start}.score-card{display:none}.dashboard-grid{grid-template-columns:1fr}.job-panel{order:-1}.resume-canvas{grid-template-columns:1fr}.resume-nav{display:flex;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}.resume-nav button{white-space:nowrap;width:auto}.resume-paper{width:calc(100% - 24px);margin:12px auto}}
+@media(max-width:600px){.topbar{padding:0 16px}.brand small{display:none}.workspace-head{padding:28px 16px 20px}.workspace-head h1{font-size:27px}.dashboard-grid{padding:0 12px 30px}.panel-toolbar small,.ghost-button{display:none}.resume-paper{padding:30px 22px}.job-panel{padding:20px}.resume-name-row h2{font-size:28px}}
+@media print{.topbar,.workspace-head,.job-panel,.panel-toolbar,.resume-nav{display:none!important}.dashboard-grid{display:block;padding:0}.resume-panel{border:0;box-shadow:none}.resume-canvas{display:block;min-height:auto}.resume-paper{box-shadow:none;margin:0;width:100%;min-height:auto}.app-shell{background:white}}

@@ -1,0 +1,22 @@
+[Unit]
+Description=Z Lab persistent visit counter
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/zlab-counter
+Environment=PYTHONUNBUFFERED=1
+Environment=ZLAB_COUNTER_DB=/var/lib/zlab-counter/visits.db
+ExecStart=/usr/bin/python3 /opt/zlab-counter/visit_counter.py
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/zlab-counter
+
+[Install]
+WantedBy=multi-user.target

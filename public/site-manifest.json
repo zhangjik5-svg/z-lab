@@ -1,0 +1,20 @@
+{
+  "name": "Z Lab｜张浩的个人开发实验室",
+  "short_name": "Z Lab",
+  "start_url": "/#home",
+  "display": "standalone",
+  "background_color": "#edf0ea",
+  "theme_color": "#285f4c",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

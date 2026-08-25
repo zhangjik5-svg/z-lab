@@ -1,0 +1,1 @@
+0 */2 * * * root /usr/bin/python3 /usr/local/bin/zhida-sync-jobs.py /var/www/html/jobs-data.json 2>&1 | /usr/bin/logger -t zhida-job-sync
