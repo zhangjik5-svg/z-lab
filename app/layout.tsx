@@ -13,8 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '职达｜简历修改与岗位检索工作台',
-  description: '一站式完成简历优化、岗位检索与求职进度管理。',
+  metadataBase: new URL('https://zhangjik.bbroot.com'),
+  title: 'Z Lab｜张浩的个人开发实验室',
+  description: '集求职、学习、生活工具和轻量娱乐于一体的个人开发项目。',
+  openGraph: {
+    title: 'Z Lab｜张浩的个人开发实验室',
+    description: '集求职、学习、生活工具和轻量娱乐于一体的个人开发项目。',
+    images: ['/og.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Z Lab｜张浩的个人开发实验室',
+    description: '集求职、学习、生活工具和轻量娱乐于一体的个人开发项目。',
+    images: ['/og.png'],
+  },
 };
 
 export default function RootLayout({

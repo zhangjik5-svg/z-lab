@@ -45,3 +45,4 @@ next-env.d.ts
 
 # generated from live recruitment sources; do not redistribute in the public repository
 /public/jobs-data.json
+/public/jobs-data.json.gz

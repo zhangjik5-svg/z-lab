@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import gzip
 import os
 import sys
 import tempfile
@@ -16,6 +17,24 @@ SOURCE_URL = "https://yundou.cc.cd/notes/jobs.json"
 TENCENT_URL = "https://docs.qq.com/sheet/DS0JPSmtaZk5SUHdw?tab=0vnh5f"
 FEISHU_URL = "https://yal2at57cvq.feishu.cn/base/GtSLbyyR3aCENOsJYC6cdlsVnih?table=tbllTNyaMiYmRlv4&view=vewff65AIW"
 PALETTE = ["#514778", "#315f7b", "#b77744", "#8a536d", "#3d6e71", "#697a40", "#47707b", "#685b75"]
+JOB_FIELDS = [
+    "id",
+    "title",
+    "company",
+    "companyType",
+    "city",
+    "batch",
+    "audience",
+    "industry",
+    "updated",
+    "deadline",
+    "tags",
+    "desc",
+    "applicationUrl",
+    "sourceId",
+    "sourceName",
+    "color",
+]
 
 
 def clean(value: object) -> str:
@@ -79,14 +98,6 @@ def map_job(row: dict[str, object]) -> dict[str, object]:
     for item in [batch, company_type, *split_categories(industry)]:
         if item and item not in tags:
             tags.append(item)
-    requirements = [
-        f"招聘对象：{audience or '未注明'}",
-        f"工作地点：{location or '未注明'}",
-        f"企业类型：{company_type}",
-        f"所属行业：{industry or '未注明'}",
-        f"更新时间：{updated or '未注明'}",
-        f"数据来源：{source_name}",
-    ]
     return {
         "id": f"{source_id}-{stable_id}",
         "title": position_title(position),
@@ -100,7 +111,6 @@ def map_job(row: dict[str, object]) -> dict[str, object]:
         "deadline": clean(row.get("deadline")),
         "tags": tags[:6],
         "desc": position,
-        "requirements": requirements,
         "applicationUrl": clean(row.get("applicationUrl")),
         "sourceId": source_id,
         "sourceName": source_name,
@@ -144,7 +154,10 @@ def synchronize(output_path: Path) -> int:
         seen.add(key)
         deduplicated.append(row)
 
+    mapped_jobs = [map_job(row) for row in deduplicated]
     payload = {
+        "schemaVersion": 2,
+        "fields": JOB_FIELDS,
         "generatedAt": upstream.get("generatedAt"),
         "syncedBy": "职达岗位同步",
         "source": "腾讯表格 + 飞书表格",
@@ -153,7 +166,9 @@ def synchronize(output_path: Path) -> int:
         "rawCount": len(source_rows),
         "count": len(deduplicated),
         "updateIntervalHours": 2,
-        "jobs": [map_job(row) for row in deduplicated],
+        # Array rows avoid repeating 16 field names thousands of times. The browser
+        # expands them after download and reconstructs the derived requirements.
+        "jobs": [[job.get(field, "") for field in JOB_FIELDS] for job in mapped_jobs],
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -163,6 +178,14 @@ def synchronize(output_path: Path) -> int:
         temporary_path = Path(temp.name)
     os.chmod(temporary_path, 0o644)
     temporary_path.replace(output_path)
+
+    gzip_path = output_path.with_suffix(f"{output_path.suffix}.gz")
+    with tempfile.NamedTemporaryFile("wb", dir=output_path.parent, delete=False) as compressed_temp:
+        with gzip.GzipFile(fileobj=compressed_temp, mode="wb", compresslevel=6) as compressed:
+            compressed.write(output_path.read_bytes())
+        compressed_path = Path(compressed_temp.name)
+    os.chmod(compressed_path, 0o644)
+    compressed_path.replace(gzip_path)
     return len(deduplicated)
 
 
