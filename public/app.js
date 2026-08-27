@@ -138,8 +138,8 @@ function normalizeJob(rawJob,fields){
 let jobs = fallbackJobs.map(normalizeJob);
 let trackerEntries = [];
 let resumeVersions = [];
-let jobDataLoaded=false,jobDataPromise=null,jobCachePromise=null,jobNetworkChecked=false;
-const JOB_CACHE_DB='zlab-job-cache-v1',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
+let jobDataLoaded=false,jobDataPromise=null,jobCachePromise=null,jobServerMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='';
+const JOB_CACHE_DB='zlab-job-cache-v2',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
 const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试中',offer:'Offer',closed:'已结束'};
 
 const $ = (id) => document.getElementById(id);
@@ -536,17 +536,25 @@ async function writeJobCache(dataset){
 function jobSourceLabel(dataset,cached=false){
   const updated=new Date(dataset.generatedAt),source=dataset.source||'在线岗位库';
   const base=Number.isNaN(updated.getTime())?`已连接${source}`:`${source} · 同步于 ${updated.toLocaleString('zh-CN',{hour12:false})}`;
-  return `${base}${cached?' · 已快速载入本地缓存':''} · 每 2 小时更新 · ${jobs.length.toLocaleString('zh-CN')} 条`;
+  const count=Number(dataset.total??jobs.length);
+  return `${base}${cached?' · 已快速载入本地缓存':''} · 每 2 小时更新 · ${count.toLocaleString('zh-CN')} 条匹配`;
 }
 
 function applyJobDataset(dataset,cached=false){
-  if(!Array.isArray(dataset.jobs)||!dataset.jobs.length)throw new Error('岗位数据为空');
-  jobs=dataset.normalized?dataset.jobs:dataset.jobs.map(job=>normalizeJob(job,dataset.fields));jobDataLoaded=true;populateJobFilters();
+  if(!Array.isArray(dataset.jobs))throw new Error('岗位数据格式错误');
+  jobs=dataset.normalized?dataset.jobs:dataset.jobs.map(job=>normalizeJob(job,dataset.fields));jobDataLoaded=true;
+  jobServerMode=dataset.mode==='api'||Number.isFinite(Number(dataset.total));jobServerTotal=Number(dataset.total??jobs.length);jobServerMeta=dataset.meta||null;populateJobFilters();
   $('dataSourceStatus').textContent=jobSourceLabel(dataset,cached);updateLabJobCounts();
 }
 
+function currentJobQuery(){
+  return {keyword:value('jobKeyword'),province:value('provinceFilter')||'all',city:value('cityFilter')||'all',companyType:value('companyTypeFilter')||'all',batch:value('batchFilter')||'all',audience:value('audienceFilter')||'all',sort:value('sortFilter')||'match',limit:String(visibleLimit)};
+}
+
+function currentJobQueryKey(){return JSON.stringify(currentJobQuery())}
+
 async function restoreCachedJobs(){
-  try{const cached=await readJobCache();if(!cached||!Array.isArray(cached.jobs)||!cached.jobs.length)return false;applyJobDataset(cached,true);if($('jobsView').classList.contains('active'))renderJobs(false);return true}catch{return false}
+  try{const cached=await readJobCache();if(!cached||cached.queryKey!==currentJobQueryKey()||!Array.isArray(cached.jobs))return false;applyJobDataset(cached,true);if($('jobsView').classList.contains('active'))renderJobs(false);return true}catch{return false}
 }
 
 function waitForJobIdle(){
@@ -555,15 +563,15 @@ function waitForJobIdle(){
 }
 
 function loadOnlineJobs(force=false){
-  if(jobDataLoaded&&jobNetworkChecked&&!force)return Promise.resolve(true);if(jobDataPromise)return jobDataPromise;
-  $('dataSourceStatus').textContent=jobDataLoaded?'正在检查岗位库更新…':'正在载入完整岗位库，请稍候…';
+  const query=currentJobQuery(),queryKey=JSON.stringify(query);if(jobDataLoaded&&jobRequestKey===queryKey&&!force)return Promise.resolve(true);if(jobDataPromise)return jobDataPromise;
+  $('dataSourceStatus').textContent=jobDataLoaded?'正在更新筛选结果…':'正在连接本站岗位服务…';
   jobDataPromise=(async()=>{const hadOnlineData=jobDataLoaded;try{
-      const response=await fetch('/jobs-data.json',{cache:force?'reload':'default'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
-      const text=await response.text();if(hadOnlineData)await waitForJobIdle();const payload=JSON.parse(text);if(!Array.isArray(payload.jobs)||!payload.jobs.length)throw new Error('岗位数据为空');
-      applyJobDataset(payload,false);jobNetworkChecked=true;
-      const cached={normalized:true,generatedAt:payload.generatedAt,source:payload.source,jobs,savedAt:Date.now()};writeJobCache(cached).catch(()=>{});return true;
+      const params=new URLSearchParams(query);const response=await fetch(`/api/jobs?${params}`,{cache:force?'reload':'default'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      const payload=await response.json();if(!Array.isArray(payload.jobs))throw new Error('岗位数据格式错误');
+      if(hadOnlineData)await waitForJobIdle();applyJobDataset({...payload,mode:'api'},false);jobRequestKey=queryKey;
+      const cached={...payload,mode:'api',queryKey,savedAt:Date.now()};writeJobCache(cached).catch(()=>{});return true;
     }catch(error){
-      console.warn('Online job data unavailable',error);if(!hadOnlineData){jobs=fallbackJobs;$('dataSourceStatus').textContent='在线岗位库加载失败，当前显示本地备用岗位'}else $('dataSourceStatus').textContent='本次更新暂时失败，继续显示上次岗位数据';updateLabJobCounts();return false;
+      console.warn('Online job data unavailable',error);if(!hadOnlineData){jobs=fallbackJobs.map(normalizeJob);jobServerMode=false;jobServerTotal=jobs.length;$('dataSourceStatus').textContent='岗位服务暂时不可用，当前显示本站备用岗位'}else $('dataSourceStatus').textContent='本次更新暂时失败，继续显示上次结果';updateLabJobCounts();return false;
     }finally{jobDataPromise=null}})();
   return jobDataPromise;
 }
@@ -574,8 +582,14 @@ async function loadJobsForView(){
   return loadOnlineJobs(false);
 }
 
+async function refreshJobResults(resetLimit=true,force=false){
+  if(resetLimit)visibleLimit=60;
+  await loadOnlineJobs(force);renderJobs(false);
+  return jobServerMode?jobServerTotal:activeJobs.length;
+}
+
 function updateLabJobCounts(){
-  const count=jobs.length.toLocaleString('zh-CN');
+  const count=(jobServerMode?jobServerTotal:jobs.length).toLocaleString('zh-CN');
   if($('homeJobCount'))$('homeJobCount').textContent=count;
 }
 
@@ -601,6 +615,7 @@ function countedValues(source,getValues){
 
 function populateCityFilter(){
   const selected=value('cityFilter')||'all',province=value('provinceFilter')||'all';
+  if(jobServerMode&&jobServerMeta?.cities){replaceFilterOptions('cityFilter',province==='all'?'全部城市':`${province} · 全部城市`,jobServerMeta.cities,selected);return}
   const relevant=province==='all'?jobs:jobs.filter(job=>province==='全国 / 多地'?job.nationwide:(job.provinces||[]).includes(province));
   const counts=countedValues(relevant,job=>job.cities||[]);const order=Object.values(provinceCityMap).flat();
   const entries=[...counts.entries()].sort((a,b)=>{const ai=order.indexOf(a[0]),bi=order.indexOf(b[0]);return (ai<0?9999:ai)-(bi<0?9999:bi)||b[1]-a[1]});
@@ -609,6 +624,7 @@ function populateCityFilter(){
 
 function populateJobFilters(){
   const selectedProvince=value('provinceFilter')||'all',selectedType=value('companyTypeFilter')||'all';
+  if(jobServerMode&&jobServerMeta){replaceFilterOptions('provinceFilter','全国',jobServerMeta.provinces||[],selectedProvince);replaceFilterOptions('companyTypeFilter','全部类型',jobServerMeta.companyTypes||[],selectedType);populateCityFilter();return}
   const provinceCounts=countedValues(jobs,job=>[...(job.provinces||[]),...(job.nationwide?['全国 / 多地']:[])]);
   const provinceOrder=[...Object.keys(provinceCityMap),'全国 / 多地'];
   const provinces=[...provinceCounts.entries()].sort((a,b)=>provinceOrder.indexOf(a[0])-provinceOrder.indexOf(b[0]));
@@ -623,19 +639,19 @@ function renderJobs(resetLimit=true){
   const rawKeyword=value('jobKeyword'),keyword=rawKeyword.toLowerCase().normalize('NFKC').replace(/\s+/g,' ').trim(),compactKeyword=keyword.replace(/\s+/g,'');
   const terms=searchTerms(rawKeyword);
   const province=$('provinceFilter').value,city=$('cityFilter').value,companyType=$('companyTypeFilter').value,batch=$('batchFilter').value,audience=$('audienceFilter').value,sort=$('sortFilter').value;
-  activeJobs=jobs.filter(job=>{
+  activeJobs=(jobServerMode?jobs:jobs.filter(job=>{
     const haystack=`${job.title} ${job.company} ${(job.tags||[]).join(' ')} ${job.desc||''} ${job.industry||''} ${job.batch||''} ${job.audience||''} ${job.city||''}`.toLowerCase().normalize('NFKC'),compactHaystack=haystack.replace(/\s+/g,'');
     const relevance=relevanceFor(job,terms);
     const provinceMatch=province==='all'||(province==='全国 / 多地'?job.nationwide:(job.provinces||[]).includes(province));
     return (!keyword||compactHaystack.includes(compactKeyword)||relevance>0)&&provinceMatch&&(city==='all'||(job.cities||[]).includes(city))&&(companyType==='all'||job.companyType===companyType)&&(batch==='all'||(job.batch||'').includes(batch))&&(audience==='all'||(job.audience||'').includes(audience));
-  }).map(job=>({...job,relevance:relevanceFor(job,terms),match:analyzeJob(job).score}));
-  activeJobs.sort((a,b)=>sort==='updated'?updatedValue(b.updated)-updatedValue(a.updated):sort==='company'?(a.company||'').localeCompare(b.company||'','zh-CN'):keyword?(b.relevance-a.relevance||b.match-a.match):b.match-a.match);
-  $('resultCount').textContent=`${activeJobs.length} 个匹配岗位`;
-  const shown=Math.min(visibleLimit,activeJobs.length);
+  })).map(job=>({...job,relevance:relevanceFor(job,terms),match:analyzeJob(job).score}));
+  if(!jobServerMode)activeJobs.sort((a,b)=>sort==='updated'?updatedValue(b.updated)-updatedValue(a.updated):sort==='company'?(a.company||'').localeCompare(b.company||'','zh-CN'):keyword?(b.relevance-a.relevance||b.match-a.match):b.match-a.match);
+  const total=jobServerMode?jobServerTotal:activeJobs.length;$('resultCount').textContent=`${total} 个匹配岗位`;
+  const shown=Math.min(jobServerMode?activeJobs.length:visibleLimit,activeJobs.length);
   const appliedFilters=[province!=='all'?province:'',city!=='all'?city:'',companyType!=='all'?companyType:''].filter(Boolean);
-  $('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 条${jobDataLoaded?'':' · 完整岗位库仍在加载'}`;
+  $('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 条${jobDataLoaded?'':' · 岗位服务正在连接'}`;
   const grid=$('jobGrid'); grid.replaceChildren();
-  activeJobs.slice(0,visibleLimit).forEach(job=>{
+  activeJobs.slice(0,jobServerMode?activeJobs.length:visibleLimit).forEach(job=>{
     const card=document.createElement('article');card.className='job-card';card.style.setProperty('--logo',job.color);card.style.setProperty('--match',`${job.match}%`);
     card.innerHTML=`<div class="job-card-top"><div class="company-logo"></div><div><h2></h2><p class="company"></p></div><strong class="salary"></strong><button class="save-job" data-save-job="${job.id}" aria-label="收藏岗位">☆</button></div><div class="job-meta"><span></span><span></span><span></span></div><p class="job-description"></p><div class="job-tags"></div><div class="job-card-footer"><span class="match-value"><i></i>${job.match}% 匹配</span><button class="detail-button" data-job-id="${job.id}">查看详情 →</button></div>`;
     card.querySelector('.company-logo').textContent=(job.title||job.company||'岗').slice(0,1);card.querySelector('h2').textContent=job.title;card.querySelector('.company').textContent=job.company;card.querySelector('.salary').textContent=job.deadline?`截止 ${job.deadline}`:(job.salary||'');card.querySelector('.job-description').textContent=job.desc;
@@ -644,7 +660,7 @@ function renderJobs(resetLimit=true){
     const tags=card.querySelector('.job-tags');job.tags.forEach(tag=>{const el=document.createElement('span');el.textContent=tag;if(tag===job.companyType)el.className='job-type-chip';tags.append(el)});grid.append(card);
   });
   $('emptyState').hidden=activeJobs.length>0; grid.hidden=activeJobs.length===0;
-  $('loadMore').hidden=activeJobs.length<=visibleLimit;
+  $('loadMore').hidden=shown>=total;
 }
 
 function bossSearchUrl(job){
@@ -823,7 +839,7 @@ function setupGuides(){
   $('guideSearch').addEventListener('input',renderGuides);$('downloadGuidesOffline').addEventListener('click',downloadOfflineGuides);$('guideGrid').addEventListener('click',event=>{const card=event.target.closest('[data-guide-id]');if(card)openGuide(card.dataset.guideId)});$('guideGrid').addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-guide-id]')){event.preventDefault();openGuide(event.target.dataset.guideId)}});$('guideReset').addEventListener('click',()=>{$('guideSearch').value='';activeGuideCategory='全部';renderGuides()});$('guideDialogClose').addEventListener('click',()=>$('guideDialog').close());$('guideDialog').addEventListener('click',event=>{if(event.target===$('guideDialog'))$('guideDialog').close()});renderGuides();
 }
 
-function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260826-project23').catch(error=>console.warn('离线缓存注册失败',error))}
+function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260827-project24').catch(error=>console.warn('离线缓存注册失败',error))}
 
 let board2048=[],score2048=0,game2048Touch=null,activePlayGame='2048';
 function add2048Tile(){const empty=board2048.map((value,index)=>value?null:index).filter(index=>index!==null);if(!empty.length)return;const index=empty[Math.floor(Math.random()*empty.length)];board2048[index]=Math.random()<.9?2:4}
@@ -1012,9 +1028,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   document.querySelectorAll('[data-mobile-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.mobileView)));
   document.querySelectorAll('[data-career-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.careerView)));
   document.querySelector('.brand').addEventListener('click',event=>{event.preventDefault();switchView('home')});
-  $('jobSearchForm').addEventListener('submit',async event=>{event.preventDefault();if(!jobDataLoaded){$('resultSummary').textContent='正在载入完整岗位库，完成后自动搜索…';toast('岗位库正在加载，完成后会自动搜索');await loadJobsForView()}renderJobs();toast(`找到 ${activeJobs.length} 个匹配岗位`)});
-  $('provinceFilter').addEventListener('change',()=>{populateCityFilter();renderJobs()});
-  ['cityFilter','companyTypeFilter','batchFilter','audienceFilter','sortFilter'].forEach(id=>$(id).addEventListener('change',()=>renderJobs()));
+  $('jobSearchForm').addEventListener('submit',async event=>{event.preventDefault();$('resultSummary').textContent='正在从本站岗位库检索…';const total=await refreshJobResults();toast(`找到 ${total} 个匹配岗位`)});
+  $('provinceFilter').addEventListener('change',async()=>{$('cityFilter').value='all';await refreshJobResults()});
+  ['cityFilter','companyTypeFilter','batchFilter','audienceFilter','sortFilter'].forEach(id=>$(id).addEventListener('change',()=>refreshJobResults()));
   $('jobGrid').addEventListener('click',event=>{const save=event.target.closest('[data-save-job]');if(save){const job=jobs.find(item=>String(item.id)===String(save.dataset.saveJob));if(job)toggleTrackedJob(job);return}const button=event.target.closest('[data-job-id]');if(button)openJob(button.dataset.jobId)});
   $('dialogClose').addEventListener('click',()=>$('jobDialog').close());
   $('jobDialog').addEventListener('click',event=>{if(event.target===$('jobDialog'))$('jobDialog').close()});
@@ -1024,15 +1040,15 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('applicationConfirm').addEventListener('click',event=>{if(event.target===$('applicationConfirm'))resolveApplication(false)});
   window.addEventListener('focus',checkPendingApplication);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkPendingApplication()});
-  $('loadMore').addEventListener('click',()=>{visibleLimit+=60;renderJobs(false)});
-  $('resetFilters').addEventListener('click',()=>{$('jobKeyword').value='';$('provinceFilter').value='all';populateCityFilter();$('cityFilter').value='all';$('companyTypeFilter').value='all';$('batchFilter').value='all';$('audienceFilter').value='all';renderJobs()});
+  $('loadMore').addEventListener('click',async()=>{visibleLimit=Math.min(visibleLimit+60,240);await refreshJobResults(false)});
+  $('resetFilters').addEventListener('click',async()=>{$('jobKeyword').value='';$('provinceFilter').value='all';$('cityFilter').value='all';$('companyTypeFilter').value='all';$('batchFilter').value='all';$('audienceFilter').value='all';$('sortFilter').value='match';await refreshJobResults()});
   $('trackerSearch').addEventListener('input',renderTracker);
   $('exportTracker').addEventListener('click',exportTracker);
   $('trackerBoard').addEventListener('change',event=>{const card=event.target.closest('[data-track-id]');if(card&&event.target.matches('.tracker-status'))updateTrackedEntry(card.dataset.trackId,{status:event.target.value})});
   $('trackerBoard').addEventListener('input',event=>{const card=event.target.closest('[data-track-id]');if(card&&event.target.matches('.tracker-note')){clearTimeout(event.target.timer);event.target.timer=setTimeout(()=>updateTrackedEntry(card.dataset.trackId,{note:event.target.value},false),350)}});
   $('trackerBoard').addEventListener('click',event=>{const card=event.target.closest('[data-track-id]');if(!card)return;const entry=trackedJob(card.dataset.trackId);if(event.target.closest('.open-track')){const live=jobs.find(job=>String(job.id)===String(entry.id));if(live)openJob(live.id);else window.open(entry.applicationUrl,'_blank','noopener')}if(event.target.closest('.remove-track')&&confirm('从投递看板移除这个岗位吗？')){trackerEntries=trackerEntries.filter(item=>item.id!==entry.id);persistTracker();renderTracker();renderJobs(false)}});
   document.querySelectorAll('[data-go-view]').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.goView==='tools'&&button.dataset.toolAnchor)openTool(button.dataset.toolAnchor);else switchView(button.dataset.goView)}));
-  setInterval(async()=>{if(!jobDataLoaded&&!$('jobsView').classList.contains('active'))return;await loadOnlineJobs(true);renderJobs(false)},2*60*60*1000);
+  setInterval(async()=>{if(!jobDataLoaded&&!$('jobsView').classList.contains('active'))return;await refreshJobResults(false,true)},2*60*60*1000);
   const requested=location.hash.slice(1);if(['home','study','play','guides','life','tools','resume','jobs','tracker','about'].includes(requested))switchView(requested);else switchView('home');
   const preload=()=>jobCachePromise.then(()=>loadOnlineJobs(false));if('requestIdleCallback'in window)requestIdleCallback(preload,{timeout:2500});else setTimeout(preload,1200);
   setTimeout(checkPendingApplication,1200);

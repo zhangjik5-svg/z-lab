@@ -1,0 +1,20 @@
+[Unit]
+Description=Z Lab recruitment search API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+Environment=PYTHONUNBUFFERED=1
+Environment=ZLAB_JOBS_DATA=/var/www/html/jobs-data.json
+ExecStart=/usr/bin/python3 /opt/zlab-jobs/job_api.py
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
