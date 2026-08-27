@@ -144,6 +144,7 @@ const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试
 
 const $ = (id) => document.getElementById(id);
 const value = (id) => ($(id)?.value || '').trim();
+const JOB_API_ENDPOINT=location.hostname.endsWith('.chatgpt.site')?'https://zhangjik.bbroot.com/api/jobs':'/api/jobs';
 let saveTimer;
 let activeJobs = [];
 let visibleLimit = 60;
@@ -566,7 +567,7 @@ function loadOnlineJobs(force=false){
   const query=currentJobQuery(),queryKey=JSON.stringify(query);if(jobDataLoaded&&jobRequestKey===queryKey&&!force)return Promise.resolve(true);if(jobDataPromise)return jobDataPromise;
   $('dataSourceStatus').textContent=jobDataLoaded?'正在更新筛选结果…':'正在连接本站岗位服务…';
   jobDataPromise=(async()=>{const hadOnlineData=jobDataLoaded;try{
-      const params=new URLSearchParams(query);const response=await fetch(`/api/jobs?${params}`,{cache:force?'reload':'default'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      const params=new URLSearchParams(query);const response=await fetch(`${JOB_API_ENDPOINT}?${params}`,{cache:force?'reload':'default'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
       const payload=await response.json();if(!Array.isArray(payload.jobs))throw new Error('岗位数据格式错误');
       if(hadOnlineData)await waitForJobIdle();applyJobDataset({...payload,mode:'api'},false);jobRequestKey=queryKey;
       const cached={...payload,mode:'api',queryKey,savedAt:Date.now()};writeJobCache(cached).catch(()=>{});return true;
@@ -839,7 +840,7 @@ function setupGuides(){
   $('guideSearch').addEventListener('input',renderGuides);$('downloadGuidesOffline').addEventListener('click',downloadOfflineGuides);$('guideGrid').addEventListener('click',event=>{const card=event.target.closest('[data-guide-id]');if(card)openGuide(card.dataset.guideId)});$('guideGrid').addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-guide-id]')){event.preventDefault();openGuide(event.target.dataset.guideId)}});$('guideReset').addEventListener('click',()=>{$('guideSearch').value='';activeGuideCategory='全部';renderGuides()});$('guideDialogClose').addEventListener('click',()=>$('guideDialog').close());$('guideDialog').addEventListener('click',event=>{if(event.target===$('guideDialog'))$('guideDialog').close()});renderGuides();
 }
 
-function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260827-project24').catch(error=>console.warn('离线缓存注册失败',error))}
+function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260827-project25').catch(error=>console.warn('离线缓存注册失败',error))}
 
 let board2048=[],score2048=0,game2048Touch=null,activePlayGame='2048';
 function add2048Tile(){const empty=board2048.map((value,index)=>value?null:index).filter(index=>index!==null);if(!empty.length)return;const index=empty[Math.floor(Math.random()*empty.length)];board2048[index]=Math.random()<.9?2:4}
