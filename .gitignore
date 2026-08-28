@@ -43,6 +43,5 @@ next-env.d.ts
 /outputs/
 /work/
 
-# generated from live recruitment sources; do not redistribute in the public repository
-/public/jobs-data.json
+# A full public snapshot is tracked so job search still works when the live API is unavailable.
 /public/jobs-data.json.gz

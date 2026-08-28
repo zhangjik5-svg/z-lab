@@ -138,13 +138,14 @@ function normalizeJob(rawJob,fields){
 let jobs = fallbackJobs.map(normalizeJob);
 let trackerEntries = [];
 let resumeVersions = [];
-let jobDataLoaded=false,jobDataPromise=null,jobPromiseKey='',jobCachePromise=null,jobServerMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='';
+let jobDataLoaded=false,jobDataPromise=null,jobPromiseKey='',jobCachePromise=null,jobServerMode=false,jobSnapshotMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='',jobSnapshotPromise=null;
 const JOB_CACHE_DB='zlab-job-cache-v2',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
 const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试中',offer:'Offer',closed:'已结束'};
 
 const $ = (id) => document.getElementById(id);
 const value = (id) => ($(id)?.value || '').trim();
 const JOB_API_ENDPOINT='/api/jobs';
+const JOB_SNAPSHOT_ENDPOINT='/jobs-data.json';
 let saveTimer;
 let activeJobs = [];
 let visibleLimit = 60;
@@ -535,8 +536,8 @@ async function writeJobCache(dataset){
 }
 
 function jobSourceLabel(dataset,cached=false){
-  const updated=new Date(dataset.generatedAt),source=dataset.source||'在线岗位库';
-  const base=Number.isNaN(updated.getTime())?`已连接${source}`:`${source} · 同步于 ${updated.toLocaleString('zh-CN',{hour12:false})}`;
+  const updated=dataset.generatedAt?new Date(dataset.generatedAt):null,source=dataset.source||'在线岗位库';
+  const base=!updated||Number.isNaN(updated.getTime())?`已连接${source}`:`${source} · 同步于 ${updated.toLocaleString('zh-CN',{hour12:false})}`;
   const count=Number(dataset.total??jobs.length);
   return `${base}${cached?' · 已快速载入本地缓存':''} · 每 2 小时更新 · ${count.toLocaleString('zh-CN')} 条匹配`;
 }
@@ -544,8 +545,19 @@ function jobSourceLabel(dataset,cached=false){
 function applyJobDataset(dataset,cached=false){
   if(!Array.isArray(dataset.jobs))throw new Error('岗位数据格式错误');
   jobs=dataset.normalized?dataset.jobs:dataset.jobs.map(job=>normalizeJob(job,dataset.fields));jobDataLoaded=true;
-  jobServerMode=dataset.mode==='api'||Number.isFinite(Number(dataset.total));jobServerTotal=Number(dataset.total??jobs.length);jobServerMeta=dataset.meta||null;populateJobFilters();
+  jobSnapshotMode=dataset.mode==='snapshot';jobServerMode=!jobSnapshotMode&&(dataset.mode==='api'||Number.isFinite(Number(dataset.total)));jobServerTotal=Number(dataset.total??dataset.count??jobs.length);jobServerMeta=dataset.meta||null;populateJobFilters();
   $('dataSourceStatus').textContent=jobSourceLabel(dataset,cached);updateLabJobCounts();
+}
+
+async function loadJobSnapshot(){
+  if(!jobSnapshotPromise)jobSnapshotPromise=fetch(JOB_SNAPSHOT_ENDPOINT,{cache:'default'}).then(response=>{if(!response.ok)throw new Error(`snapshot HTTP ${response.status}`);return response.json()}).then(payload=>{if(!Array.isArray(payload.jobs))throw new Error('完整岗位快照格式错误');return payload}).catch(error=>{jobSnapshotPromise=null;throw error});
+  const snapshot=await jobSnapshotPromise;applyJobDataset({...snapshot,mode:'snapshot',total:undefined},false);jobRequestKey='snapshot';return snapshot;
+}
+
+function jobSnapshotLabel(snapshot){
+  const updated=snapshot.generatedAt?new Date(snapshot.generatedAt):null;
+  const stamp=updated&&!Number.isNaN(updated.getTime())?` · 同步于 ${updated.toLocaleString('zh-CN',{hour12:false})}`:'';
+  return `本站完整岗位快照${stamp} · ${jobs.length.toLocaleString('zh-CN')} 条岗位 · 在线接口恢复后自动切换`;
 }
 
 function currentJobQuery(){
@@ -564,7 +576,7 @@ function waitForJobIdle(){
 }
 
 function loadOnlineJobs(force=false){
-  const query=currentJobQuery(),queryKey=JSON.stringify(query);if(jobDataLoaded&&jobRequestKey===queryKey&&!force)return Promise.resolve(true);if(jobDataPromise)return jobPromiseKey===queryKey?jobDataPromise:jobDataPromise.then(()=>loadOnlineJobs(force));
+  const query=currentJobQuery(),queryKey=JSON.stringify(query);if(jobSnapshotMode&&!force)return Promise.resolve(true);if(jobDataLoaded&&jobRequestKey===queryKey&&!force)return Promise.resolve(true);if(jobDataPromise)return jobPromiseKey===queryKey?jobDataPromise:jobDataPromise.then(()=>loadOnlineJobs(force));
   $('dataSourceStatus').textContent=jobDataLoaded?'正在更新筛选结果…':'正在连接本站岗位服务…';
   jobPromiseKey=queryKey;
   jobDataPromise=(async()=>{const hadOnlineData=jobDataLoaded;try{
@@ -573,7 +585,7 @@ function loadOnlineJobs(force=false){
       if(hadOnlineData)await waitForJobIdle();applyJobDataset({...payload,mode:'api'},false);jobRequestKey=queryKey;
       const cached={...payload,mode:'api',queryKey,savedAt:Date.now()};writeJobCache(cached).catch(()=>{});return true;
     }catch(error){
-      console.warn('Online job data unavailable',error);if(!hadOnlineData){jobs=fallbackJobs.map(normalizeJob);jobServerMode=false;jobServerTotal=jobs.length;$('dataSourceStatus').textContent='岗位服务暂时不可用，当前显示本站备用岗位'}else $('dataSourceStatus').textContent='本次更新暂时失败，继续显示上次结果';updateLabJobCounts();return false;
+      console.warn('Online job data unavailable',error);try{const snapshot=await loadJobSnapshot();$('dataSourceStatus').textContent=jobSnapshotLabel(snapshot);return true}catch(snapshotError){console.warn('Job snapshot unavailable',snapshotError);if(!hadOnlineData){jobs=fallbackJobs.map(normalizeJob);jobSnapshotMode=false;jobServerMode=false;jobServerTotal=jobs.length;$('dataSourceStatus').textContent='岗位服务暂时不可用，当前显示本站备用岗位'}else $('dataSourceStatus').textContent='本次更新暂时失败，继续显示上次结果';updateLabJobCounts();return false}
     }finally{jobDataPromise=null;jobPromiseKey=''}})();
   return jobDataPromise;
 }
@@ -841,7 +853,7 @@ function setupGuides(){
   $('guideSearch').addEventListener('input',renderGuides);$('downloadGuidesOffline').addEventListener('click',downloadOfflineGuides);$('guideGrid').addEventListener('click',event=>{const card=event.target.closest('[data-guide-id]');if(card)openGuide(card.dataset.guideId)});$('guideGrid').addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-guide-id]')){event.preventDefault();openGuide(event.target.dataset.guideId)}});$('guideReset').addEventListener('click',()=>{$('guideSearch').value='';activeGuideCategory='全部';renderGuides()});$('guideDialogClose').addEventListener('click',()=>$('guideDialog').close());$('guideDialog').addEventListener('click',event=>{if(event.target===$('guideDialog'))$('guideDialog').close()});renderGuides();
 }
 
-function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260828-project27').catch(error=>console.warn('离线缓存注册失败',error))}
+function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260828-project29').catch(error=>console.warn('离线缓存注册失败',error))}
 
 let board2048=[],score2048=0,game2048Touch=null,activePlayGame='2048';
 function add2048Tile(){const empty=board2048.map((value,index)=>value?null:index).filter(index=>index!==null);if(!empty.length)return;const index=empty[Math.floor(Math.random()*empty.length)];board2048[index]=Math.random()<.9?2:4}

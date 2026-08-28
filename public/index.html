@@ -381,6 +381,16 @@
   <script src="vendor/pdf.min.js?v=3.11.174" defer></script>
   <script src="vendor/qrcode.min.js?v=1.0.0" defer></script>
   <script src="data/yysls-guides.js?v=20260825-project22" defer></script>
-  <script src="app.js?v=20260828-project27" defer></script>
+  <script>
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(sessionStorage.getItem('zlab-sw-project29-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project29-reloaded','1');
+        location.reload();
+      });
+      navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
+    }
+  </script>
+  <script src="app.js?v=20260828-project29" defer></script>
 </body>
 </html>
