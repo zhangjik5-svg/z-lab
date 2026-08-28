@@ -42,6 +42,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+*.tsbuildinfo
 
 # A full public snapshot is tracked so job search still works when the live API is unavailable.
 /public/jobs-data.json.gz

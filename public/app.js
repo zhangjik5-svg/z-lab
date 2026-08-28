@@ -141,6 +141,8 @@ let resumeVersions = [];
 let jobDataLoaded=false,jobDataPromise=null,jobPromiseKey='',jobCachePromise=null,jobServerMode=false,jobSnapshotMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='',jobSnapshotPromise=null;
 const JOB_CACHE_DB='zlab-job-cache-v2',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
 const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试中',offer:'Offer',closed:'已结束'};
+const TRACKER_LOCAL_KEY='zhida-tracker',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
+let trackerCloud={authenticated:false,user:null,revision:0,syncing:false,syncTimer:null};
 
 const $ = (id) => document.getElementById(id);
 const value = (id) => ($(id)?.value || '').trim();
@@ -297,12 +299,77 @@ function saveBackup(){
 }
 
 function loadProductState(){
-  try{trackerEntries=JSON.parse(localStorage.getItem('zhida-tracker')||'[]');if(!Array.isArray(trackerEntries))trackerEntries=[]}catch{trackerEntries=[]}
+  try{trackerEntries=JSON.parse(localStorage.getItem(TRACKER_LOCAL_KEY)||'[]');if(!Array.isArray(trackerEntries))trackerEntries=[]}catch{trackerEntries=[]}
   try{resumeVersions=JSON.parse(localStorage.getItem('zhida-resume-versions')||'[]');if(!Array.isArray(resumeVersions))resumeVersions=[]}catch{resumeVersions=[]}
   renderVersionOptions();updateTrackerCount();
 }
 
-function persistTracker(){localStorage.setItem('zhida-tracker',JSON.stringify(trackerEntries));updateTrackerCount()}
+function writeTrackerLocal(dirty=false){
+  try{localStorage.setItem(TRACKER_LOCAL_KEY,JSON.stringify(trackerEntries));if(dirty)localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1');else localStorage.removeItem(TRACKER_CLOUD_DIRTY_KEY)}catch{}
+  updateTrackerCount();
+}
+
+function setTrackerSyncStatus(mode,text){
+  const status=$('trackerPrivacy');if(!status)return;status.className=mode?`is-${mode}`:'';status.textContent=text;
+  if($('accountSyncText'))$('accountSyncText').textContent=text;
+}
+
+function renderAccountState(){
+  const signedIn=trackerCloud.authenticated&&trackerCloud.user;
+  $('accountGuest').hidden=Boolean(signedIn);$('accountMember').hidden=!signedIn;
+  $('accountButton').classList.toggle('is-signed-in',Boolean(signedIn));
+  $('accountButtonText').textContent=signedIn?(trackerCloud.user.displayName||trackerCloud.user.email).slice(0,8):'登录同步';
+  $('trackerAccountButton').querySelector('b').textContent=signedIn?'云端同步':'登录并同步';
+  if(!signedIn){setTrackerSyncStatus('',trackerEntries.length?'本地已保存 · 登录后自动迁移':'本地保存 · 登录后云端同步');return}
+  const display=trackerCloud.user.displayName||trackerCloud.user.email;
+  $('accountAvatar').textContent=(display.trim()[0]||'Z').toUpperCase();$('accountName').textContent=display;$('accountEmail').textContent=trackerCloud.user.email;
+}
+
+function mergeTrackerEntries(localEntries,serverEntries){
+  const merged=new Map();
+  [...serverEntries,...localEntries].forEach(entry=>{
+    if(!entry?.id)return;const current=merged.get(String(entry.id));
+    const incomingTime=Date.parse(entry.updatedAt||entry.savedAt||0)||0,currentTime=Date.parse(current?.updatedAt||current?.savedAt||0)||0;
+    if(!current||incomingTime>=currentTime)merged.set(String(entry.id),entry);
+  });
+  return [...merged.values()].sort((a,b)=>(Date.parse(b.updatedAt||b.savedAt||0)||0)-(Date.parse(a.updatedAt||a.savedAt||0)||0));
+}
+
+async function loadTrackerAccount(){
+  try{
+    const accountResponse=await fetch('/api/account',{headers:{Accept:'application/json'},cache:'no-store'});const account=await accountResponse.json();
+    if(!account.authenticated){trackerCloud={...trackerCloud,authenticated:false,user:null};renderAccountState();return}
+    trackerCloud={...trackerCloud,authenticated:true,user:account.user};renderAccountState();setTrackerSyncStatus('syncing','正在读取云端记录…');
+    const response=await fetch('/api/tracker',{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    const cloud=await response.json();const serverEntries=Array.isArray(cloud.entries)?cloud.entries:[];trackerCloud.revision=Number(cloud.revision)||0;
+    const previousUser=localStorage.getItem(TRACKER_CLOUD_USER_KEY);const hasUnsynced=localStorage.getItem(TRACKER_CLOUD_DIRTY_KEY)==='1';
+    const migrateGuest=!previousUser&&trackerEntries.length>0;const mergeCurrentUser=previousUser===account.user.id&&hasUnsynced;
+    if(previousUser&&previousUser!==account.user.id){trackerEntries=serverEntries}
+    else if(migrateGuest||mergeCurrentUser)trackerEntries=mergeTrackerEntries(trackerEntries,serverEntries);
+    else trackerEntries=serverEntries;
+    localStorage.setItem(TRACKER_CLOUD_USER_KEY,account.user.id);writeTrackerLocal(migrateGuest||mergeCurrentUser);renderTracker();renderJobs(false);
+    if(migrateGuest||mergeCurrentUser)await syncTrackerCloud({force:true});
+    else{setTrackerSyncStatus('synced',`云端已同步 · ${trackerEntries.length} 条记录`);$('accountSyncDetail').textContent='收藏、投递状态和备注已安全保存'}
+  }catch(error){console.warn('Unable to load cloud tracker',error);setTrackerSyncStatus('offline','云端暂时不可用 · 已继续保存在本地');renderAccountState()}
+}
+
+async function syncTrackerCloud({force=false,retry=true}={}){
+  if(!trackerCloud.authenticated||trackerCloud.syncing)return false;
+  if(!force&&localStorage.getItem(TRACKER_CLOUD_DIRTY_KEY)!=='1')return true;
+  trackerCloud.syncing=true;setTrackerSyncStatus('syncing','正在同步到云端…');
+  try{
+    const response=await fetch('/api/tracker',{method:'PUT',headers:{'Content-Type':'application/json',Accept:'application/json'},cache:'no-store',body:JSON.stringify({entries:trackerEntries,revision:trackerCloud.revision})});
+    const data=await response.json().catch(()=>({}));
+    if(response.status===409&&retry&&Number.isFinite(Number(data.revision))){trackerCloud.revision=Number(data.revision);trackerEntries=mergeTrackerEntries(trackerEntries,Array.isArray(data.entries)?data.entries:[]);writeTrackerLocal(true);renderTracker();renderJobs(false);trackerCloud.syncing=false;return syncTrackerCloud({force:true,retry:false})}
+    if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);
+    trackerCloud.revision=Number(data.revision)||trackerCloud.revision+1;writeTrackerLocal(false);setTrackerSyncStatus('synced',`云端已同步 · ${trackerEntries.length} 条记录`);$('accountSyncDetail').textContent=`最近同步：${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`;return true;
+  }catch(error){console.warn('Unable to sync cloud tracker',error);try{localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1')}catch{}setTrackerSyncStatus('offline','同步失败 · 记录仍已保存在本地');return false
+  }finally{trackerCloud.syncing=false}
+}
+
+function scheduleTrackerCloudSync(){clearTimeout(trackerCloud.syncTimer);trackerCloud.syncTimer=setTimeout(()=>syncTrackerCloud(),700)}
+
+function persistTracker(){writeTrackerLocal(true);scheduleTrackerCloudSync()}
 function persistVersions(){localStorage.setItem('zhida-resume-versions',JSON.stringify(resumeVersions));renderVersionOptions()}
 
 function renderVersionOptions(selected='current'){
@@ -853,7 +920,7 @@ function setupGuides(){
   $('guideSearch').addEventListener('input',renderGuides);$('downloadGuidesOffline').addEventListener('click',downloadOfflineGuides);$('guideGrid').addEventListener('click',event=>{const card=event.target.closest('[data-guide-id]');if(card)openGuide(card.dataset.guideId)});$('guideGrid').addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-guide-id]')){event.preventDefault();openGuide(event.target.dataset.guideId)}});$('guideReset').addEventListener('click',()=>{$('guideSearch').value='';activeGuideCategory='全部';renderGuides()});$('guideDialogClose').addEventListener('click',()=>$('guideDialog').close());$('guideDialog').addEventListener('click',event=>{if(event.target===$('guideDialog'))$('guideDialog').close()});renderGuides();
 }
 
-function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260828-project30').catch(error=>console.warn('离线缓存注册失败',error))}
+function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260829-project31').catch(error=>console.warn('离线缓存注册失败',error))}
 
 let board2048=[],score2048=0,game2048Touch=null,activePlayGame='2048';
 function add2048Tile(){const empty=board2048.map((value,index)=>value?null:index).filter(index=>index!==null);if(!empty.length)return;const index=empty[Math.floor(Math.random()*empty.length)];board2048[index]=Math.random()<.9?2:4}
@@ -1013,7 +1080,7 @@ function handleExtraEntryClick(event){
 
 document.addEventListener('DOMContentLoaded',async()=>{
   jobCachePromise=restoreCachedJobs();
-  loadResume();loadProductState();populateJobFilters();renderJobs();renderTracker();setupToolbox();setupEverydayTools();setupStudy();setupGuides();setupPlay();setupLife();registerVisit();registerOfflineCache();
+  loadResume();loadProductState();populateJobFilters();renderJobs();renderTracker();setupToolbox();setupEverydayTools();setupStudy();setupGuides();setupPlay();setupLife();registerVisit();registerOfflineCache();renderAccountState();loadTrackerAccount();
   $('resumeForm').addEventListener('input',()=>{renderResume();scheduleSave()});
   $('resumeForm').addEventListener('click',handleExtraEntryClick);
   $('sampleButton').addEventListener('click',()=>{fillForm(sampleResume);toast('示例内容已填入，可继续修改')});
@@ -1034,6 +1101,11 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('resumeDropZone').addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file){const transfer=new DataTransfer();transfer.items.add(file);$('resumeImport').files=transfer.files;$('resumeImport').dispatchEvent(new Event('change'))}});
   $('printButton').addEventListener('click',()=>window.print());
   $('overviewButton').addEventListener('click',()=>$('functionDialog').showModal());
+  $('accountButton').addEventListener('click',()=>$('accountDialog').showModal());
+  $('trackerAccountButton').addEventListener('click',()=>{if(trackerCloud.authenticated)syncTrackerCloud({force:true});else $('accountDialog').showModal()});
+  $('accountDialogClose').addEventListener('click',()=>$('accountDialog').close());
+  $('accountDialog').addEventListener('click',event=>{if(event.target===$('accountDialog'))$('accountDialog').close()});
+  $('accountSyncNow').addEventListener('click',()=>syncTrackerCloud({force:true}));
   $('functionDialogClose').addEventListener('click',()=>$('functionDialog').close());
   $('functionDialog').addEventListener('click',event=>{if(event.target===$('functionDialog'))$('functionDialog').close()});
   document.querySelectorAll('[data-overview-view]').forEach(button=>button.addEventListener('click',()=>{const view=button.dataset.overviewView;$('functionDialog').close();if(view==='tools'&&button.dataset.toolAnchor)openTool(button.dataset.toolAnchor);else switchView(view)}));

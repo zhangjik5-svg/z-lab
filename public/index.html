@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260825-cute">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260825-cute">
   <link rel="manifest" href="site-manifest.json?v=20260825-zlab3">
-  <link rel="stylesheet" href="styles.css?v=20260827-project24">
+  <link rel="stylesheet" href="styles.css?v=20260829-project31">
 </head>
 <body>
   <header class="topbar">
@@ -36,7 +36,7 @@
       <button class="nav-button career-nav" data-view="jobs">岗位搜索</button>
       <button class="nav-button career-nav" data-view="tracker">投递管理 <i id="trackerNavCount">0</i></button>
     </nav>
-    <button class="overview-button" id="overviewButton" type="button" aria-haspopup="dialog" aria-controls="functionDialog"><span>九宫格</span><b>全部功能</b></button>
+    <div class="topbar-actions"><button class="account-button" id="accountButton" type="button" aria-haspopup="dialog" aria-controls="accountDialog"><span>☁</span><b id="accountButtonText">登录同步</b></button><button class="overview-button" id="overviewButton" type="button" aria-haspopup="dialog" aria-controls="functionDialog"><span>九宫格</span><b>全部功能</b></button></div>
   </header>
 
   <main>
@@ -314,8 +314,8 @@
 
     <section id="trackerView" class="view" aria-labelledby="trackerTitle">
       <div class="page-head tracker-head">
-        <div><p class="eyebrow">APPLICATION TRACKER</p><h1 id="trackerTitle">把每一次机会，都推进到下一步。</h1><p>收藏岗位后记录投递状态、面试进度和备注，数据只保存在当前浏览器。</p></div>
-        <button class="secondary-button" id="exportTracker">导出求职记录</button>
+        <div><p class="eyebrow">APPLICATION TRACKER</p><h1 id="trackerTitle">把每一次机会，都推进到下一步。</h1><p>收藏岗位后记录投递状态、面试进度和备注；登录后可跨浏览器、跨设备自动同步。</p></div>
+        <div class="tracker-head-actions"><button class="cloud-sync-button" id="trackerAccountButton" type="button"><span>☁</span><b>登录并同步</b></button><button class="secondary-button" id="exportTracker">导出求职记录</button></div>
       </div>
       <div class="tracker-stats">
         <article><span>全部机会</span><b id="statAll">0</b><small>已收藏岗位</small></article>
@@ -323,7 +323,7 @@
         <article><span>面试阶段</span><b id="statInterview">0</b><small>待准备与跟进</small></article>
         <article><span>收到 Offer</span><b id="statOffer">0</b><small>阶段转化结果</small></article>
       </div>
-      <div class="tracker-toolbar"><label class="search-field"><span>⌕</span><input id="trackerSearch" placeholder="搜索公司或岗位" aria-label="搜索求职记录"></label><span id="trackerPrivacy">本地保存 · 仅你可见</span></div>
+      <div class="tracker-toolbar"><label class="search-field"><span>⌕</span><input id="trackerSearch" placeholder="搜索公司或岗位" aria-label="搜索求职记录"></label><span id="trackerPrivacy">本地保存 · 登录后云端同步</span></div>
       <div class="tracker-board" id="trackerBoard">
         <section class="tracker-column" data-status="saved"><header><span></span><b>已收藏</b><i id="countSaved">0</i></header><div class="tracker-list" id="listSaved"></div></section>
         <section class="tracker-column" data-status="applied"><header><span></span><b>已投递</b><i id="countApplied">0</i></header><div class="tracker-list" id="listApplied"></div></section>
@@ -337,7 +337,7 @@
     <section id="aboutView" class="view" aria-labelledby="aboutTitle">
       <div class="about-hero"><p class="eyebrow">ABOUT Z LAB</p><h1 id="aboutTitle">这是我的个人开发空间，也是一组真正可以使用的功能。</h1><p>Z Lab 不限定为某一种网站。我会把日常遇到的真实需求做成可以直接使用的工具，职达求职和开发者工具箱也会继续更新。</p><div class="about-actions"><button class="primary-button" data-go-view="home">返回首页</button><button class="secondary-button" data-go-view="tools">使用工具箱</button></div></div>
       <div class="project-flow" aria-label="开发流程"><article><span>01</span><b>发现问题</b><p>从自己真实遇到的麻烦出发。</p></article><i>→</i><article><span>02</span><b>做出原型</b><p>先完成一条可运行的核心路径。</p></article><i>→</i><article><span>03</span><b>上线使用</b><p>让功能在真实环境中持续运行。</p></article><i>→</i><article><span>04</span><b>继续更新</b><p>根据新的问题逐步完善体验。</p></article></div>
-      <div class="about-grid"><article><p class="eyebrow">USEFUL FIRST</p><h2>为什么做这个网站？</h2><p>我希望这里不只是一个展示页面，而是拥有公开地址、真实功能，并且可以被别人直接使用的网站。</p></article><article><p class="eyebrow">PRIVACY FIRST</p><h2>数据如何处理？</h2><p>学习记录、工具箱输入、简历内容和投递记录优先保存在用户自己的浏览器，不会作为个人资料上传到服务器。</p></article><article><p class="eyebrow">ALWAYS BUILDING</p><h2>接下来会做什么？</h2><p>继续完善学习、娱乐、开发工具和跨设备数据能力，让 Z Lab 逐步变成真正实用的个人数字工作台。</p></article></div>
+      <div class="about-grid"><article><p class="eyebrow">USEFUL FIRST</p><h2>为什么做这个网站？</h2><p>我希望这里不只是一个展示页面，而是拥有公开地址、真实功能，并且可以被别人直接使用的网站。</p></article><article><p class="eyebrow">PRIVACY FIRST</p><h2>数据如何处理？</h2><p>学习记录、工具箱输入和简历内容保存在你的浏览器；只有在主动登录后，收藏、投递状态和面试备注才会同步到私人云端空间。</p></article><article><p class="eyebrow">ALWAYS BUILDING</p><h2>接下来会做什么？</h2><p>继续完善学习、娱乐、开发工具和跨设备数据能力，让 Z Lab 逐步变成真正实用的个人数字工作台。</p></article></div>
       <div class="version-note"><span>当前功能</span><b>Z Lab</b><p>学习空间 · 娱乐空间 · 生活空间 · 日常工具 · 职达求职</p></div>
     </section>
   </main>
@@ -352,6 +352,21 @@
       <section><header><i>02</i><div><span>日常工具</span><b>浏览器本地处理</b></div></header><button type="button" data-overview-view="tools" data-tool-anchor="wheelTool"><span>随机转盘</span><small>帮你快速做决定</small></button><button type="button" data-overview-view="tools" data-tool-anchor="qrTool"><span>二维码生成</span><small>文字与网址转二维码</small></button><button type="button" data-overview-view="tools" data-tool-anchor="countdownTool"><span>重要日倒计时</span><small>记录值得期待的日期</small></button><button type="button" data-overview-view="tools" data-tool-anchor="jsonTool"><span>JSON 格式化</span><small>校验、格式化、压缩</small></button><button type="button" data-overview-view="tools" data-tool-anchor="textStatsTool"><span>文字统计</span><small>字符、词语与行数</small></button><button type="button" data-overview-view="tools"><span>查看全部工具</span><small>时间戳、编解码与密码</small></button></section>
       <section class="career-dialog-group"><header><i>03</i><div><span>求职工具</span><b>完整求职工作流</b></div></header><button type="button" data-overview-view="resume"><span>简历制作</span><small>模板、导入与 PDF</small></button><button type="button" data-overview-view="jobs"><span>岗位搜索</span><small>在线岗位库与匹配</small></button><button type="button" data-overview-view="tracker"><span>投递管理</span><small>收藏、面试与 Offer</small></button></section>
     </div>
+  </dialog>
+
+  <dialog id="accountDialog" class="account-dialog" aria-labelledby="accountDialogTitle">
+    <button class="dialog-close" id="accountDialogClose" aria-label="关闭">×</button>
+    <div class="account-hero"><span class="account-cloud">☁</span><p class="eyebrow">Z LAB ACCOUNT</p><h2 id="accountDialogTitle">让求职记录跟着你走。</h2><p id="accountIntro">登录后，收藏、投递状态和面试备注会保存到你的私人云端空间。</p></div>
+    <section class="account-guest" id="accountGuest">
+      <div class="account-benefits"><article><b>跨设备保存</b><span>换电脑或手机，记录仍然存在</span></article><article><b>自动迁移</b><span>当前浏览器里的历史记录不会丢失</span></article><article><b>仍可游客使用</b><span>不登录也能继续搜索和制作简历</span></article></div>
+      <a class="primary-button account-login" href="/signin-with-chatgpt?return_to=%2F%23tracker">使用 ChatGPT 账号登录</a>
+      <small>无需在本站另设密码；登录仅用于识别你的私人数据。</small>
+    </section>
+    <section class="account-member" id="accountMember" hidden>
+      <div class="account-profile"><span id="accountAvatar">Z</span><div><b id="accountName">已登录</b><small id="accountEmail"></small></div><i>已安全连接</i></div>
+      <div class="account-sync-state"><span>云端同步</span><b id="accountSyncText">正在读取记录…</b><small id="accountSyncDetail">收藏与投递状态仅对你可见</small></div>
+      <div class="account-actions"><button class="secondary-button" id="accountSyncNow" type="button">立即同步</button><a class="text-account-link" href="/signout-with-chatgpt?return_to=%2F%23tracker">退出登录</a></div>
+    </section>
   </dialog>
 
   <dialog id="importDialog" class="import-dialog">
@@ -384,13 +399,13 @@
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(sessionStorage.getItem('zlab-sw-project30-reloaded'))return;
-        sessionStorage.setItem('zlab-sw-project30-reloaded','1');
+        if(sessionStorage.getItem('zlab-sw-project31-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project31-reloaded','1');
         location.reload();
       });
       navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
     }
   </script>
-  <script src="app.js?v=20260828-project30" defer></script>
+  <script src="app.js?v=20260829-project31" defer></script>
 </body>
 </html>
