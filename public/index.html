@@ -384,13 +384,13 @@
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(sessionStorage.getItem('zlab-sw-project29-reloaded'))return;
-        sessionStorage.setItem('zlab-sw-project29-reloaded','1');
+        if(sessionStorage.getItem('zlab-sw-project30-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project30-reloaded','1');
         location.reload();
       });
       navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
     }
   </script>
-  <script src="app.js?v=20260828-project29" defer></script>
+  <script src="app.js?v=20260828-project30" defer></script>
 </body>
 </html>
