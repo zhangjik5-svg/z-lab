@@ -141,7 +141,7 @@ let resumeVersions = [];
 let jobDataLoaded=false,jobDataPromise=null,jobPromiseKey='',jobCachePromise=null,jobServerMode=false,jobSnapshotMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='',jobSnapshotPromise=null;
 const JOB_CACHE_DB='zlab-job-cache-v2',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
 const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试中',offer:'Offer',closed:'已结束'};
-const TRACKER_LOCAL_KEY='zhida-tracker',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
+const TRACKER_LOCAL_KEY='zhida-tracker',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_PROVIDER_KEY='zhida-tracker-cloud-provider',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
 let trackerCloud={authenticated:false,user:null,revision:0,syncing:false,syncTimer:null};
 
 const $ = (id) => document.getElementById(id);
@@ -342,13 +342,13 @@ async function loadTrackerAccount(){
     trackerCloud={...trackerCloud,authenticated:true,user:account.user};renderAccountState();setTrackerSyncStatus('syncing','正在读取云端记录…');
     const response=await fetch('/api/tracker',{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
     const cloud=await response.json();const serverEntries=Array.isArray(cloud.entries)?cloud.entries:[];trackerCloud.revision=Number(cloud.revision)||0;
-    const previousUser=localStorage.getItem(TRACKER_CLOUD_USER_KEY);const hasUnsynced=localStorage.getItem(TRACKER_CLOUD_DIRTY_KEY)==='1';
-    const migrateGuest=!previousUser&&trackerEntries.length>0;const mergeCurrentUser=previousUser===account.user.id&&hasUnsynced;
-    if(previousUser&&previousUser!==account.user.id){trackerEntries=serverEntries}
-    else if(migrateGuest||mergeCurrentUser)trackerEntries=mergeTrackerEntries(trackerEntries,serverEntries);
+    const previousUser=localStorage.getItem(TRACKER_CLOUD_USER_KEY);const previousProvider=localStorage.getItem(TRACKER_CLOUD_PROVIDER_KEY);const hasUnsynced=localStorage.getItem(TRACKER_CLOUD_DIRTY_KEY)==='1';
+    const migrateLegacy=previousProvider!=='email-v1'&&trackerEntries.length>0;const migrateGuest=!previousUser&&trackerEntries.length>0;const mergeCurrentUser=previousProvider==='email-v1'&&previousUser===account.user.id&&hasUnsynced;
+    if(previousProvider==='email-v1'&&previousUser&&previousUser!==account.user.id){trackerEntries=serverEntries}
+    else if(migrateLegacy||migrateGuest||mergeCurrentUser)trackerEntries=mergeTrackerEntries(trackerEntries,serverEntries);
     else trackerEntries=serverEntries;
-    localStorage.setItem(TRACKER_CLOUD_USER_KEY,account.user.id);writeTrackerLocal(migrateGuest||mergeCurrentUser);renderTracker();renderJobs(false);
-    if(migrateGuest||mergeCurrentUser)await syncTrackerCloud({force:true});
+    localStorage.setItem(TRACKER_CLOUD_USER_KEY,account.user.id);localStorage.setItem(TRACKER_CLOUD_PROVIDER_KEY,'email-v1');writeTrackerLocal(migrateLegacy||migrateGuest||mergeCurrentUser);renderTracker();renderJobs(false);
+    if(migrateLegacy||migrateGuest||mergeCurrentUser)await syncTrackerCloud({force:true});
     else{setTrackerSyncStatus('synced',`云端已同步 · ${trackerEntries.length} 条记录`);$('accountSyncDetail').textContent='收藏、投递状态和备注已安全保存'}
   }catch(error){console.warn('Unable to load cloud tracker',error);setTrackerSyncStatus('offline','云端暂时不可用 · 已继续保存在本地');renderAccountState()}
 }
@@ -368,6 +368,27 @@ async function syncTrackerCloud({force=false,retry=true}={}){
 }
 
 function scheduleTrackerCloudSync(){clearTimeout(trackerCloud.syncTimer);trackerCloud.syncTimer=setTimeout(()=>syncTrackerCloud(),700)}
+
+function setAccountAuthError(message=''){
+  const element=$('accountAuthError');element.textContent=message;element.hidden=!message;
+}
+
+async function submitAccountAuth(mode){
+  const email=value('accountAuthEmail');const password=$('accountAuthPassword').value;
+  if(!email||!password){setAccountAuthError('请填写邮箱和密码');return}
+  const button=mode==='register'?$('accountRegister'):$('accountLogin');const original=button.textContent;button.disabled=true;button.textContent=mode==='register'?'正在注册…':'正在登录…';setAccountAuthError();
+  try{
+    const response=await fetch(`/api/auth/${mode}`,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email,password})});
+    const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'操作失败，请稍后再试');
+    trackerCloud={...trackerCloud,authenticated:true,user:data.user,revision:0};$('accountAuthPassword').value='';renderAccountState();await loadTrackerAccount();toast(mode==='register'?'注册成功，历史记录已开始同步':'登录成功，记录已恢复');
+  }catch(error){setAccountAuthError(error.message||'操作失败，请稍后再试')}
+  finally{button.disabled=false;button.textContent=original}
+}
+
+async function logoutAccount(){
+  try{await fetch('/api/auth/logout',{method:'POST',headers:{Accept:'application/json'}})}catch{}
+  trackerCloud={...trackerCloud,authenticated:false,user:null,revision:0};renderAccountState();$('accountDialog').close();toast('已退出，当前浏览器仍保留一份记录');
+}
 
 function persistTracker(){writeTrackerLocal(true);scheduleTrackerCloudSync()}
 function persistVersions(){localStorage.setItem('zhida-resume-versions',JSON.stringify(resumeVersions));renderVersionOptions()}
@@ -920,7 +941,7 @@ function setupGuides(){
   $('guideSearch').addEventListener('input',renderGuides);$('downloadGuidesOffline').addEventListener('click',downloadOfflineGuides);$('guideGrid').addEventListener('click',event=>{const card=event.target.closest('[data-guide-id]');if(card)openGuide(card.dataset.guideId)});$('guideGrid').addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-guide-id]')){event.preventDefault();openGuide(event.target.dataset.guideId)}});$('guideReset').addEventListener('click',()=>{$('guideSearch').value='';activeGuideCategory='全部';renderGuides()});$('guideDialogClose').addEventListener('click',()=>$('guideDialog').close());$('guideDialog').addEventListener('click',event=>{if(event.target===$('guideDialog'))$('guideDialog').close()});renderGuides();
 }
 
-function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260829-project31').catch(error=>console.warn('离线缓存注册失败',error))}
+function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260829-project33').catch(error=>console.warn('离线缓存注册失败',error))}
 
 let board2048=[],score2048=0,game2048Touch=null,activePlayGame='2048';
 function add2048Tile(){const empty=board2048.map((value,index)=>value?null:index).filter(index=>index!==null);if(!empty.length)return;const index=empty[Math.floor(Math.random()*empty.length)];board2048[index]=Math.random()<.9?2:4}
@@ -1105,6 +1126,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('trackerAccountButton').addEventListener('click',()=>{if(trackerCloud.authenticated)syncTrackerCloud({force:true});else $('accountDialog').showModal()});
   $('accountDialogClose').addEventListener('click',()=>$('accountDialog').close());
   $('accountDialog').addEventListener('click',event=>{if(event.target===$('accountDialog'))$('accountDialog').close()});
+  $('accountAuthForm').addEventListener('submit',event=>{event.preventDefault();submitAccountAuth('login')});
+  $('accountRegister').addEventListener('click',()=>submitAccountAuth('register'));
+  $('accountLogout').addEventListener('click',logoutAccount);
   $('accountSyncNow').addEventListener('click',()=>syncTrackerCloud({force:true}));
   $('functionDialogClose').addEventListener('click',()=>$('functionDialog').close());
   $('functionDialog').addEventListener('click',event=>{if(event.target===$('functionDialog'))$('functionDialog').close()});

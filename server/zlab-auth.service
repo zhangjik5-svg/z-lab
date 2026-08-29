@@ -1,0 +1,21 @@
+[Unit]
+Description=Z Lab account and tracker API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+Environment=PYTHONUNBUFFERED=1
+Environment=ZLAB_AUTH_DB=/var/lib/zlab-auth/zlab.db
+ExecStart=/usr/bin/python3 /opt/zlab-auth/auth_api.py
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/zlab-auth
+
+[Install]
+WantedBy=multi-user.target

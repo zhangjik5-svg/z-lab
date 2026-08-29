@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260825-cute">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260825-cute">
   <link rel="manifest" href="site-manifest.json?v=20260825-zlab3">
-  <link rel="stylesheet" href="styles.css?v=20260829-project31">
+  <link rel="stylesheet" href="styles.css?v=20260829-project33">
 </head>
 <body>
   <header class="topbar">
@@ -359,13 +359,18 @@
     <div class="account-hero"><span class="account-cloud">☁</span><p class="eyebrow">Z LAB ACCOUNT</p><h2 id="accountDialogTitle">让求职记录跟着你走。</h2><p id="accountIntro">登录后，收藏、投递状态和面试备注会保存到你的私人云端空间。</p></div>
     <section class="account-guest" id="accountGuest">
       <div class="account-benefits"><article><b>跨设备保存</b><span>换电脑或手机，记录仍然存在</span></article><article><b>自动迁移</b><span>当前浏览器里的历史记录不会丢失</span></article><article><b>仍可游客使用</b><span>不登录也能继续搜索和制作简历</span></article></div>
-      <a class="primary-button account-login" href="/signin-with-chatgpt?return_to=%2F%23tracker">使用 ChatGPT 账号登录</a>
-      <small>无需在本站另设密码；登录仅用于识别你的私人数据。</small>
+      <form class="account-auth-form" id="accountAuthForm">
+        <label>邮箱<input id="accountAuthEmail" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="QQ、163 或其他常用邮箱" required></label>
+        <label>密码<input id="accountAuthPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="至少 8 个字符" required></label>
+        <p class="account-auth-error" id="accountAuthError" role="alert" hidden></p>
+        <div class="account-auth-actions"><button class="primary-button" id="accountLogin" type="submit">登录</button><button class="secondary-button" id="accountRegister" type="button">注册账号</button></div>
+      </form>
+      <small>QQ、163 和其他常用邮箱都可以使用，不需要 ChatGPT 账号。</small>
     </section>
     <section class="account-member" id="accountMember" hidden>
       <div class="account-profile"><span id="accountAvatar">Z</span><div><b id="accountName">已登录</b><small id="accountEmail"></small></div><i>已安全连接</i></div>
       <div class="account-sync-state"><span>云端同步</span><b id="accountSyncText">正在读取记录…</b><small id="accountSyncDetail">收藏与投递状态仅对你可见</small></div>
-      <div class="account-actions"><button class="secondary-button" id="accountSyncNow" type="button">立即同步</button><a class="text-account-link" href="/signout-with-chatgpt?return_to=%2F%23tracker">退出登录</a></div>
+      <div class="account-actions"><button class="secondary-button" id="accountSyncNow" type="button">立即同步</button><button class="text-account-link" id="accountLogout" type="button">退出登录</button></div>
     </section>
   </dialog>
 
@@ -399,13 +404,13 @@
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(sessionStorage.getItem('zlab-sw-project31-reloaded'))return;
-        sessionStorage.setItem('zlab-sw-project31-reloaded','1');
+        if(sessionStorage.getItem('zlab-sw-project33-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project33-reloaded','1');
         location.reload();
       });
       navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
     }
   </script>
-  <script src="app.js?v=20260829-project31" defer></script>
+  <script src="app.js?v=20260829-project33" defer></script>
 </body>
 </html>
