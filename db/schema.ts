@@ -8,3 +8,9 @@ export const trackerStates = sqliteTable('tracker_states', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
+
+export const jobQueryCache = sqliteTable('job_query_cache', {
+  queryKey: text('query_key').primaryKey(),
+  payload: text('payload').notNull(),
+  cachedAt: integer('cached_at').notNull(),
+});
