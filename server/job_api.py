@@ -152,13 +152,18 @@ class JobIndex:
         company_type = (query.get("companyType") or ["all"])[0]
         batch = (query.get("batch") or ["all"])[0]
         audience = (query.get("audience") or ["all"])[0]
-        sort = (query.get("sort") or ["match"])[0]
+        sort = (query.get("sort") or ["updated"])[0]
+        excluded = {item for item in (query.get("exclude") or [""])[0].split(",") if item}
+        if len(excluded) > 160:
+            excluded = set(list(excluded)[:160])
         limit = min(MAX_LIMIT, max(1, int((query.get("limit") or ["60"])[0])))
         compact_keyword = re.sub(r"\s+", "", normalized_text(keyword))
         terms = search_terms(keyword)
         matched: list[tuple[dict[str, object], int]] = []
         city_counts: Counter[str] = Counter()
         for job in self.jobs:
+            if str(job.get("id") or "") in excluded:
+                continue
             title = normalized_text(job.get("title"))
             tags = normalized_text(" ".join(map(str, job.get("tags") or [])))
             score = sum(7 if term in title else 5 if term in tags else 2 if term in job["_search"] else 0 for term in terms)

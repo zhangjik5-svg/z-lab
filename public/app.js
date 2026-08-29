@@ -648,8 +648,13 @@ function jobSnapshotLabel(snapshot){
   return `本站完整岗位快照${stamp} · ${jobs.length.toLocaleString('zh-CN')} 条岗位 · 在线接口恢复后自动切换`;
 }
 
+function excludedJobIds(){
+  return [...new Set(trackerEntries.map(entry=>String(entry?.id||'').trim()).filter(Boolean))];
+}
+
 function currentJobQuery(){
-  return {keyword:value('jobKeyword'),province:value('provinceFilter')||'all',city:value('cityFilter')||'all',companyType:value('companyTypeFilter')||'all',batch:value('batchFilter')||'all',audience:value('audienceFilter')||'all',sort:value('sortFilter')||'match',limit:String(visibleLimit)};
+  const excluded=excludedJobIds().slice(0,120);
+  return {keyword:value('jobKeyword'),province:value('provinceFilter')||'all',city:value('cityFilter')||'all',companyType:value('companyTypeFilter')||'all',batch:value('batchFilter')||'all',audience:value('audienceFilter')||'all',sort:value('sortFilter')||'updated',limit:String(visibleLimit),...(excluded.length?{exclude:excluded.join(',')}:{})};
 }
 
 function currentJobQueryKey(){return JSON.stringify(currentJobQuery())}
@@ -741,17 +746,19 @@ function renderJobs(resetLimit=true){
   const rawKeyword=value('jobKeyword'),keyword=rawKeyword.toLowerCase().normalize('NFKC').replace(/\s+/g,' ').trim(),compactKeyword=keyword.replace(/\s+/g,'');
   const terms=searchTerms(rawKeyword);
   const province=$('provinceFilter').value,city=$('cityFilter').value,companyType=$('companyTypeFilter').value,batch=$('batchFilter').value,audience=$('audienceFilter').value,sort=$('sortFilter').value;
-  activeJobs=(jobServerMode?jobs:jobs.filter(job=>{
+  const trackedIds=new Set(excludedJobIds());
+  const candidateJobs=(jobServerMode?jobs:jobs.filter(job=>{
     const haystack=`${job.title} ${job.company} ${(job.tags||[]).join(' ')} ${job.desc||''} ${job.industry||''} ${job.batch||''} ${job.audience||''} ${job.city||''}`.toLowerCase().normalize('NFKC'),compactHaystack=haystack.replace(/\s+/g,'');
     const relevance=relevanceFor(job,terms);
     const provinceMatch=province==='all'||(province==='全国 / 多地'?job.nationwide:(job.provinces||[]).includes(province));
     return (!keyword||compactHaystack.includes(compactKeyword)||relevance>0)&&provinceMatch&&(city==='all'||(job.cities||[]).includes(city))&&(companyType==='all'||job.companyType===companyType)&&(batch==='all'||(job.batch||'').includes(batch))&&(audience==='all'||(job.audience||'').includes(audience));
   })).map(job=>({...job,relevance:relevanceFor(job,terms),match:analyzeJob(job).score}));
+  activeJobs=candidateJobs.filter(job=>!trackedIds.has(String(job.id)));
   if(!jobServerMode)activeJobs.sort((a,b)=>sort==='updated'?updatedValue(b.updated)-updatedValue(a.updated):sort==='company'?(a.company||'').localeCompare(b.company||'','zh-CN'):keyword?(b.relevance-a.relevance||b.match-a.match):b.match-a.match);
-  const total=jobServerMode?jobServerTotal:activeJobs.length;$('resultCount').textContent=`${total} 个匹配岗位`;
+  const locallyHidden=candidateJobs.length-activeJobs.length;const total=jobServerMode?Math.max(0,jobServerTotal-locallyHidden):activeJobs.length;$('resultCount').textContent=`${total} 个可浏览岗位`;
   const shown=Math.min(jobServerMode?activeJobs.length:visibleLimit,activeJobs.length);
   const appliedFilters=[province!=='all'?province:'',city!=='all'?city:'',companyType!=='all'?companyType:''].filter(Boolean);
-  $('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 条${jobDataLoaded?'':' · 岗位服务正在连接'}`;
+  $('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 条${trackerEntries.length?' · 已自动隐藏收藏和投递记录':''}${jobDataLoaded?'':' · 岗位服务正在连接'}`;
   const grid=$('jobGrid'); grid.replaceChildren();
   activeJobs.slice(0,jobServerMode?activeJobs.length:visibleLimit).forEach(job=>{
     const card=document.createElement('article');card.className='job-card';card.style.setProperty('--logo',job.color);card.style.setProperty('--match',`${job.match}%`);
@@ -941,7 +948,7 @@ function setupGuides(){
   $('guideSearch').addEventListener('input',renderGuides);$('downloadGuidesOffline').addEventListener('click',downloadOfflineGuides);$('guideGrid').addEventListener('click',event=>{const card=event.target.closest('[data-guide-id]');if(card)openGuide(card.dataset.guideId)});$('guideGrid').addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-guide-id]')){event.preventDefault();openGuide(event.target.dataset.guideId)}});$('guideReset').addEventListener('click',()=>{$('guideSearch').value='';activeGuideCategory='全部';renderGuides()});$('guideDialogClose').addEventListener('click',()=>$('guideDialog').close());$('guideDialog').addEventListener('click',event=>{if(event.target===$('guideDialog'))$('guideDialog').close()});renderGuides();
 }
 
-function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260829-project33').catch(error=>console.warn('离线缓存注册失败',error))}
+function registerOfflineCache(){if(!('serviceWorker' in navigator))return;navigator.serviceWorker.register('/sw.js?v=20260829-project34').catch(error=>console.warn('离线缓存注册失败',error))}
 
 let board2048=[],score2048=0,game2048Touch=null,activePlayGame='2048';
 function add2048Tile(){const empty=board2048.map((value,index)=>value?null:index).filter(index=>index!==null);if(!empty.length)return;const index=empty[Math.floor(Math.random()*empty.length)];board2048[index]=Math.random()<.9?2:4}
@@ -1157,7 +1164,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     }
     await refreshJobResults(false);
   });
-  $('resetFilters').addEventListener('click',async()=>{$('jobKeyword').value='';$('provinceFilter').value='all';$('cityFilter').value='all';$('companyTypeFilter').value='all';$('batchFilter').value='all';$('audienceFilter').value='all';$('sortFilter').value='match';await refreshJobResults()});
+  $('resetFilters').addEventListener('click',async()=>{$('jobKeyword').value='';$('provinceFilter').value='all';$('cityFilter').value='all';$('companyTypeFilter').value='all';$('batchFilter').value='all';$('audienceFilter').value='all';$('sortFilter').value='updated';await refreshJobResults()});
   $('trackerSearch').addEventListener('input',renderTracker);
   $('exportTracker').addEventListener('click',exportTracker);
   $('trackerBoard').addEventListener('change',event=>{const card=event.target.closest('[data-track-id]');if(card&&event.target.matches('.tracker-status'))updateTrackedEntry(card.dataset.trackId,{status:event.target.value})});

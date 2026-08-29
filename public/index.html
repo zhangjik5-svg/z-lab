@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260825-cute">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260825-cute">
   <link rel="manifest" href="site-manifest.json?v=20260825-zlab3">
-  <link rel="stylesheet" href="styles.css?v=20260829-project33">
+  <link rel="stylesheet" href="styles.css?v=20260829-project34">
 </head>
 <body>
   <header class="topbar">
@@ -306,7 +306,7 @@
         <div class="platform-row"><span>更多岗位入口</span><a href="https://www.zhipin.com/" target="_blank" rel="noreferrer">BOSS 直聘 ↗</a><a href="https://www.liepin.com/" target="_blank" rel="noreferrer">猎聘 ↗</a><a href="https://www.zhaopin.com/" target="_blank" rel="noreferrer">智联招聘 ↗</a><small id="dataSourceStatus">正在同步腾讯与飞书岗位表格…</small></div>
       </div>
 
-      <div class="results-toolbar"><div><b id="resultCount">0 个匹配岗位</b><span id="resultSummary">正在读取在线岗位库</span></div><label>排序<select id="sortFilter"><option value="match">匹配度优先</option><option value="updated">最近更新</option><option value="company">公司名称</option></select></label></div>
+      <div class="results-toolbar"><div><b id="resultCount">0 个可浏览岗位</b><span id="resultSummary">正在读取在线岗位库</span></div><label>排序<select id="sortFilter"><option value="updated">最新发布</option><option value="match">匹配度优先</option><option value="company">公司名称</option></select></label></div>
       <div class="job-grid" id="jobGrid" aria-live="polite"></div>
       <button class="load-more" id="loadMore" hidden>加载更多岗位</button>
       <div class="empty-state" id="emptyState" hidden><span>⌕</span><h2>没有找到完全匹配的岗位</h2><p>试试缩短关键词，或放宽省份、城市、企业类型和批次筛选。</p><button class="secondary-button" id="resetFilters">重置筛选</button></div>
@@ -404,13 +404,13 @@
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(sessionStorage.getItem('zlab-sw-project33-reloaded'))return;
-        sessionStorage.setItem('zlab-sw-project33-reloaded','1');
+        if(sessionStorage.getItem('zlab-sw-project34-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project34-reloaded','1');
         location.reload();
       });
       navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
     }
   </script>
-  <script src="app.js?v=20260829-project33" defer></script>
+  <script src="app.js?v=20260829-project34" defer></script>
 </body>
 </html>
