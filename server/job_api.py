@@ -67,6 +67,11 @@ def normalized_text(value: object) -> str:
     return unicodedata.normalize("NFKC", str(value or "")).lower()
 
 
+def company_key(value: object) -> str:
+    text = re.sub(r"[\s·•・,，.。()（）\-—_]", "", normalized_text(value))
+    return re.sub(r"(?:股份有限公司|有限责任公司|有限公司|股份公司)$", "", text)
+
+
 def search_terms(value: str) -> list[str]:
     normalized = re.sub(r"[^\w+#.]+", " ", normalized_text(value)).strip()
     if not normalized:
@@ -156,13 +161,17 @@ class JobIndex:
         excluded = {item for item in (query.get("exclude") or [""])[0].split(",") if item}
         if len(excluded) > 160:
             excluded = set(list(excluded)[:160])
+        excluded_companies = {company_key(item) for item in (query.get("excludeCompany") or [""])[0].split("|") if item}
+        excluded_companies.discard("")
+        if len(excluded_companies) > 120:
+            excluded_companies = set(list(excluded_companies)[:120])
         limit = min(MAX_LIMIT, max(1, int((query.get("limit") or ["60"])[0])))
         compact_keyword = re.sub(r"\s+", "", normalized_text(keyword))
         terms = search_terms(keyword)
         matched: list[tuple[dict[str, object], int]] = []
         city_counts: Counter[str] = Counter()
         for job in self.jobs:
-            if str(job.get("id") or "") in excluded:
+            if str(job.get("id") or "") in excluded or company_key(job.get("company")) in excluded_companies:
                 continue
             title = normalized_text(job.get("title"))
             tags = normalized_text(" ".join(map(str, job.get("tags") or [])))
@@ -182,6 +191,13 @@ class JobIndex:
             if audience != "all" and audience not in str(job.get("audience") or ""):
                 continue
             matched.append((job, score))
+        best_by_company: dict[str, tuple[dict[str, object], int]] = {}
+        for job, score in matched:
+            key = company_key(job.get("company")) or f"__job_{job.get('id', '')}"
+            current = best_by_company.get(key)
+            if current is None or score > current[1] or (score == current[1] and updated_value(job.get("updated")) > updated_value(current[0].get("updated"))):
+                best_by_company[key] = (job, score)
+        matched = list(best_by_company.values())
         if sort == "updated":
             matched.sort(key=lambda item: updated_value(item[0].get("updated")), reverse=True)
         elif sort == "company":

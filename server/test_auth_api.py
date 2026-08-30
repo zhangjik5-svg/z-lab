@@ -52,13 +52,14 @@ class AuthApiTest(unittest.TestCase):
         self.assertEqual(account["user"]["email"], "friend@qq.com")
 
         entries = [{"id": "job-1", "title": "产品经理", "status": "applied", "notes": "已投递"}]
-        status, saved = self.request("PUT", "/api/tracker", {"revision": 0, "entries": entries})
+        status, saved = self.request("PUT", "/api/tracker", {"revision": 0, "entries": entries, "blockedCompanies": ["示例科技有限公司"]})
         self.assertEqual(status, 200)
         self.assertEqual(saved["revision"], 1)
 
         status, tracker = self.request("GET", "/api/tracker")
         self.assertEqual(status, 200)
         self.assertEqual(tracker["entries"][0]["status"], "applied")
+        self.assertEqual(tracker["blockedCompanies"], ["示例科技有限公司"])
 
         status, conflict = self.request("PUT", "/api/tracker", {"revision": 0, "entries": []})
         self.assertEqual(status, 409)

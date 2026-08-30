@@ -11,6 +11,7 @@ import re
 import secrets
 import sqlite3
 import time
+import unicodedata
 import uuid
 from collections import defaultdict, deque
 from contextlib import closing
@@ -116,6 +117,37 @@ def clean_entry(value: object) -> dict[str, object] | None:
             result[key] = [str(tag)[:80] for tag in item[:20]]
     result["id"] = str(value["id"])[:180]
     return result
+
+
+def company_key(value: object) -> str:
+    text = unicodedata.normalize("NFKC", str(value or "")).strip().lower()
+    text = re.sub(r"[\s·•・,，.。()（）\-—_]", "", text)
+    return re.sub(r"(?:股份有限公司|有限责任公司|有限公司|股份公司)$", "", text)
+
+
+def clean_blocked_companies(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    companies: dict[str, str] = {}
+    for item in value[:MAX_ENTRIES]:
+        name = str(item if isinstance(item, str) else item.get("name", "") if isinstance(item, dict) else "").strip()[:240]
+        key = company_key(name)
+        if key and key not in companies:
+            companies[key] = name
+    return list(companies.values())
+
+
+def parse_state_payload(raw: str | None) -> tuple[list[object], list[str]]:
+    try:
+        value = json.loads(raw or "[]")
+    except json.JSONDecodeError:
+        value = []
+    if isinstance(value, list):
+        return value, []
+    if isinstance(value, dict):
+        entries = value.get("entries", [])
+        return (entries if isinstance(entries, list) else []), clean_blocked_companies(value.get("blockedCompanies", []))
+    return [], []
 
 
 class ApiHandler(BaseHTTPRequestHandler):
@@ -233,9 +265,11 @@ class ApiHandler(BaseHTTPRequestHandler):
                 return
             with closing(connect()) as db, db:
                 state = db.execute("SELECT payload,revision,updated_at FROM tracker_states WHERE user_id=?", (user["id"],)).fetchone()
+            entries, blocked_companies = parse_state_payload(state["payload"] if state else None)
             self.send_json(HTTPStatus.OK, {
                 "authenticated": True,
-                "entries": json.loads(state["payload"]) if state else [],
+                "entries": entries,
+                "blockedCompanies": blocked_companies,
                 "revision": int(state["revision"]) if state else 0,
                 "updatedAt": int(state["updated_at"]) if state else None,
             })
@@ -316,6 +350,9 @@ class ApiHandler(BaseHTTPRequestHandler):
             if not isinstance(raw_entries, list) or len(raw_entries) > MAX_ENTRIES:
                 raise ValueError("求职记录数量超出限制")
             entries = [entry for value in raw_entries if (entry := clean_entry(value)) is not None]
+            raw_blocked_companies = payload.get("blockedCompanies", None)
+            if raw_blocked_companies is not None and (not isinstance(raw_blocked_companies, list) or len(raw_blocked_companies) > MAX_ENTRIES):
+                raise ValueError("拉黑公司数量超出限制")
         except (ValueError, TypeError, json.JSONDecodeError) as error:
             self.send_json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
             return
@@ -324,16 +361,19 @@ class ApiHandler(BaseHTTPRequestHandler):
             db.execute("BEGIN IMMEDIATE")
             state = db.execute("SELECT payload,revision FROM tracker_states WHERE user_id=?", (user["id"],)).fetchone()
             current_revision = int(state["revision"]) if state else 0
+            server_entries, server_blocked_companies = parse_state_payload(state["payload"] if state else None)
             if revision != current_revision:
                 db.rollback()
                 self.send_json(HTTPStatus.CONFLICT, {
                     "error": "云端记录已更新",
-                    "entries": json.loads(state["payload"]) if state else [],
+                    "entries": server_entries,
+                    "blockedCompanies": server_blocked_companies,
                     "revision": current_revision,
                 })
                 return
             next_revision = current_revision + 1
-            encoded = json.dumps(entries, ensure_ascii=False, separators=(",", ":"))
+            blocked_companies = server_blocked_companies if raw_blocked_companies is None else clean_blocked_companies(raw_blocked_companies)
+            encoded = json.dumps({"entries": entries, "blockedCompanies": blocked_companies}, ensure_ascii=False, separators=(",", ":"))
             db.execute(
                 """INSERT INTO tracker_states(user_id,payload,revision,created_at,updated_at)
                    VALUES(?,?,?,?,?)

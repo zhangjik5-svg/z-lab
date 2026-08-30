@@ -61,6 +61,29 @@ function cleanEntry(value: unknown): TrackerEntry | null {
   };
 }
 
+function cleanBlockedCompanies(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  const companies = new Map<string, string>();
+  value.slice(0, 500).forEach(item => {
+    const name = textValue(typeof item === 'string' ? item : (item as Record<string, unknown>)?.name, 240).trim();
+    const key = name.normalize('NFKC').toLowerCase().replace(/[\s·•・,，.。()（）\-—_]/g, '').replace(/(?:股份有限公司|有限责任公司|有限公司|股份公司)$/, '');
+    if (key && !companies.has(key)) companies.set(key, name);
+  });
+  return [...companies.values()];
+}
+
+function parsePayload(payload: string | null | undefined) {
+  let entries: TrackerEntry[] = [];
+  let blockedCompanies: string[] = [];
+  try {
+    const parsed = JSON.parse(payload || '[]');
+    const rawEntries = Array.isArray(parsed) ? parsed : parsed?.entries;
+    if (Array.isArray(rawEntries)) entries = rawEntries.map(cleanEntry).filter((entry): entry is TrackerEntry => Boolean(entry));
+    blockedCompanies = cleanBlockedCompanies(Array.isArray(parsed) ? [] : parsed?.blockedCompanies);
+  } catch {}
+  return { entries, blockedCompanies };
+}
+
 async function ensureState(userId: string, email: string) {
   const db = getDb();
   const now = new Date().toISOString();
@@ -81,15 +104,8 @@ export async function GET() {
   if (!user) return json({ authenticated: false, error: 'sign_in_required' }, 401);
 
   const state = await ensureState(user.userId, user.email);
-  let entries: TrackerEntry[] = [];
-  try {
-    const parsed = JSON.parse(state?.payload || '[]');
-    if (Array.isArray(parsed)) entries = parsed.map(cleanEntry).filter((entry): entry is TrackerEntry => Boolean(entry));
-  } catch {
-    entries = [];
-  }
-
-  return json({ authenticated: true, entries, revision: state?.revision ?? 0, updatedAt: state?.updatedAt ?? null });
+  const { entries, blockedCompanies } = parsePayload(state?.payload);
+  return json({ authenticated: true, entries, blockedCompanies, revision: state?.revision ?? 0, updatedAt: state?.updatedAt ?? null });
 }
 
 export async function PUT(request: Request) {
@@ -105,20 +121,18 @@ export async function PUT(request: Request) {
 
   const raw = body && typeof body === 'object' ? body as Record<string, unknown> : {};
   if (!Array.isArray(raw.entries) || raw.entries.length > 500) return json({ error: 'invalid_entries' }, 400);
+  if (raw.blockedCompanies !== undefined && (!Array.isArray(raw.blockedCompanies) || raw.blockedCompanies.length > 500)) return json({ error: 'invalid_blocked_companies' }, 400);
   const entries = raw.entries.map(cleanEntry).filter((entry): entry is TrackerEntry => Boolean(entry));
-  const payload = JSON.stringify(entries);
-  if (new TextEncoder().encode(payload).byteLength > 1_500_000) return json({ error: 'payload_too_large' }, 413);
 
   const baseRevision = Number.isInteger(raw.revision) ? Number(raw.revision) : -1;
   const state = await ensureState(user.userId, user.email);
   if (!state) return json({ error: 'state_unavailable' }, 503);
+  const previous = parsePayload(state.payload);
+  const blockedCompanies = raw.blockedCompanies === undefined ? previous.blockedCompanies : cleanBlockedCompanies(raw.blockedCompanies);
+  const payload = JSON.stringify({ entries, blockedCompanies });
+  if (new TextEncoder().encode(payload).byteLength > 1_500_000) return json({ error: 'payload_too_large' }, 413);
   if (baseRevision !== state.revision) {
-    let serverEntries: TrackerEntry[] = [];
-    try {
-      const parsed = JSON.parse(state.payload);
-      if (Array.isArray(parsed)) serverEntries = parsed.map(cleanEntry).filter((entry): entry is TrackerEntry => Boolean(entry));
-    } catch {}
-    return json({ error: 'revision_conflict', entries: serverEntries, revision: state.revision }, 409);
+    return json({ error: 'revision_conflict', entries: previous.entries, blockedCompanies: previous.blockedCompanies, revision: state.revision }, 409);
   }
 
   const now = new Date().toISOString();

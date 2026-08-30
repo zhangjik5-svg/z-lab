@@ -137,11 +137,12 @@ function normalizeJob(rawJob,fields){
 
 let jobs = fallbackJobs.map(normalizeJob);
 let trackerEntries = [];
+let blockedCompanies = [];
 let resumeVersions = [];
 let jobDataLoaded=false,jobDataPromise=null,jobPromiseKey='',jobCachePromise=null,jobServerMode=false,jobSnapshotMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='',jobSnapshotPromise=null;
 const JOB_CACHE_DB='zlab-job-cache-v2',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
 const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试中',offer:'Offer',closed:'已结束'};
-const TRACKER_LOCAL_KEY='zhida-tracker',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_PROVIDER_KEY='zhida-tracker-cloud-provider',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
+const TRACKER_LOCAL_KEY='zhida-tracker',BLOCKED_COMPANIES_LOCAL_KEY='zhida-company-blocklist',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_PROVIDER_KEY='zhida-tracker-cloud-provider',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
 let trackerCloud={authenticated:false,user:null,revision:0,syncing:false,syncTimer:null};
 
 const $ = (id) => document.getElementById(id);
@@ -298,15 +299,26 @@ function saveBackup(){
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`职达简历-${value('name')||'未命名'}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),500);toast('简历副本已保存');
 }
 
+function companyKey(name){
+  return String(name||'').normalize('NFKC').toLowerCase().replace(/[\s·•・,，.。()（）\-—_]/g,'').replace(/(?:股份有限公司|有限责任公司|有限公司|股份公司)$/,'');
+}
+
+function normalizeBlockedCompanies(items){
+  const companies=new Map();
+  (Array.isArray(items)?items:[]).forEach(item=>{const name=String(typeof item==='string'?item:item?.name||'').trim().slice(0,240);const key=companyKey(name);if(key&&!companies.has(key))companies.set(key,name)});
+  return [...companies.values()];
+}
+
 function loadProductState(){
   try{trackerEntries=JSON.parse(localStorage.getItem(TRACKER_LOCAL_KEY)||'[]');if(!Array.isArray(trackerEntries))trackerEntries=[]}catch{trackerEntries=[]}
+  try{blockedCompanies=normalizeBlockedCompanies(JSON.parse(localStorage.getItem(BLOCKED_COMPANIES_LOCAL_KEY)||'[]'))}catch{blockedCompanies=[]}
   try{resumeVersions=JSON.parse(localStorage.getItem('zhida-resume-versions')||'[]');if(!Array.isArray(resumeVersions))resumeVersions=[]}catch{resumeVersions=[]}
-  renderVersionOptions();updateTrackerCount();
+  renderVersionOptions();updateTrackerCount();renderBlacklist();
 }
 
 function writeTrackerLocal(dirty=false){
-  try{localStorage.setItem(TRACKER_LOCAL_KEY,JSON.stringify(trackerEntries));if(dirty)localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1');else localStorage.removeItem(TRACKER_CLOUD_DIRTY_KEY)}catch{}
-  updateTrackerCount();
+  try{localStorage.setItem(TRACKER_LOCAL_KEY,JSON.stringify(trackerEntries));localStorage.setItem(BLOCKED_COMPANIES_LOCAL_KEY,JSON.stringify(blockedCompanies));if(dirty)localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1');else localStorage.removeItem(TRACKER_CLOUD_DIRTY_KEY)}catch{}
+  updateTrackerCount();renderBlacklist();
 }
 
 function setTrackerSyncStatus(mode,text){
@@ -341,12 +353,12 @@ async function loadTrackerAccount(){
     if(!account.authenticated){trackerCloud={...trackerCloud,authenticated:false,user:null};renderAccountState();return}
     trackerCloud={...trackerCloud,authenticated:true,user:account.user};renderAccountState();setTrackerSyncStatus('syncing','正在读取云端记录…');
     const response=await fetch('/api/tracker',{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);
-    const cloud=await response.json();const serverEntries=Array.isArray(cloud.entries)?cloud.entries:[];trackerCloud.revision=Number(cloud.revision)||0;
+    const cloud=await response.json();const serverEntries=Array.isArray(cloud.entries)?cloud.entries:[];const serverBlockedCompanies=normalizeBlockedCompanies(cloud.blockedCompanies);trackerCloud.revision=Number(cloud.revision)||0;
     const previousUser=localStorage.getItem(TRACKER_CLOUD_USER_KEY);const previousProvider=localStorage.getItem(TRACKER_CLOUD_PROVIDER_KEY);const hasUnsynced=localStorage.getItem(TRACKER_CLOUD_DIRTY_KEY)==='1';
-    const migrateLegacy=previousProvider!=='email-v1'&&trackerEntries.length>0;const migrateGuest=!previousUser&&trackerEntries.length>0;const mergeCurrentUser=previousProvider==='email-v1'&&previousUser===account.user.id&&hasUnsynced;
-    if(previousProvider==='email-v1'&&previousUser&&previousUser!==account.user.id){trackerEntries=serverEntries}
-    else if(migrateLegacy||migrateGuest||mergeCurrentUser)trackerEntries=mergeTrackerEntries(trackerEntries,serverEntries);
-    else trackerEntries=serverEntries;
+    const hasLocalCareerState=trackerEntries.length>0||blockedCompanies.length>0;const migrateLegacy=previousProvider!=='email-v1'&&hasLocalCareerState;const migrateGuest=!previousUser&&hasLocalCareerState;const mergeCurrentUser=previousProvider==='email-v1'&&previousUser===account.user.id&&hasUnsynced;
+    if(previousProvider==='email-v1'&&previousUser&&previousUser!==account.user.id){trackerEntries=serverEntries;blockedCompanies=serverBlockedCompanies}
+    else if(migrateLegacy||migrateGuest||mergeCurrentUser){trackerEntries=mergeTrackerEntries(trackerEntries,serverEntries);blockedCompanies=normalizeBlockedCompanies([...blockedCompanies,...serverBlockedCompanies])}
+    else{trackerEntries=serverEntries;blockedCompanies=serverBlockedCompanies}
     localStorage.setItem(TRACKER_CLOUD_USER_KEY,account.user.id);localStorage.setItem(TRACKER_CLOUD_PROVIDER_KEY,'email-v1');writeTrackerLocal(migrateLegacy||migrateGuest||mergeCurrentUser);renderTracker();renderJobs(false);
     if(migrateLegacy||migrateGuest||mergeCurrentUser)await syncTrackerCloud({force:true});
     else{setTrackerSyncStatus('synced',`云端已同步 · ${trackerEntries.length} 条记录`);$('accountSyncDetail').textContent='收藏、投递状态和备注已安全保存'}
@@ -358,9 +370,9 @@ async function syncTrackerCloud({force=false,retry=true}={}){
   if(!force&&localStorage.getItem(TRACKER_CLOUD_DIRTY_KEY)!=='1')return true;
   trackerCloud.syncing=true;setTrackerSyncStatus('syncing','正在同步到云端…');
   try{
-    const response=await fetch('/api/tracker',{method:'PUT',headers:{'Content-Type':'application/json',Accept:'application/json'},cache:'no-store',body:JSON.stringify({entries:trackerEntries,revision:trackerCloud.revision})});
+    const response=await fetch('/api/tracker',{method:'PUT',headers:{'Content-Type':'application/json',Accept:'application/json'},cache:'no-store',body:JSON.stringify({entries:trackerEntries,blockedCompanies,revision:trackerCloud.revision})});
     const data=await response.json().catch(()=>({}));
-    if(response.status===409&&retry&&Number.isFinite(Number(data.revision))){trackerCloud.revision=Number(data.revision);trackerEntries=mergeTrackerEntries(trackerEntries,Array.isArray(data.entries)?data.entries:[]);writeTrackerLocal(true);renderTracker();renderJobs(false);trackerCloud.syncing=false;return syncTrackerCloud({force:true,retry:false})}
+    if(response.status===409&&retry&&Number.isFinite(Number(data.revision))){trackerCloud.revision=Number(data.revision);trackerEntries=mergeTrackerEntries(trackerEntries,Array.isArray(data.entries)?data.entries:[]);blockedCompanies=normalizeBlockedCompanies([...blockedCompanies,...normalizeBlockedCompanies(data.blockedCompanies)]);writeTrackerLocal(true);renderTracker();renderJobs(false);trackerCloud.syncing=false;return syncTrackerCloud({force:true,retry:false})}
     if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);
     trackerCloud.revision=Number(data.revision)||trackerCloud.revision+1;writeTrackerLocal(false);setTrackerSyncStatus('synced',`云端已同步 · ${trackerEntries.length} 条记录`);$('accountSyncDetail').textContent=`最近同步：${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`;return true;
   }catch(error){console.warn('Unable to sync cloud tracker',error);try{localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1')}catch{}setTrackerSyncStatus('offline','同步失败 · 记录仍已保存在本地');return false
@@ -541,6 +553,24 @@ function analyzeJob(job){
 
 function trackedJob(id){return trackerEntries.find(entry=>String(entry.id)===String(id))}
 function updateTrackerCount(){if($('trackerNavCount'))$('trackerNavCount').textContent=trackerEntries.length}
+function trackedCompanyKeys(){return new Set(trackerEntries.map(entry=>companyKey(entry?.company)).filter(Boolean))}
+function blockedCompanyKeys(){return new Set(blockedCompanies.map(companyKey).filter(Boolean))}
+
+function renderBlacklist(){
+  if(!$('blacklistList'))return;const list=$('blacklistList');list.replaceChildren();
+  blockedCompanies.forEach(name=>{const item=document.createElement('div');item.className='blacklist-item';const icon=document.createElement('span');icon.textContent=(name[0]||'企').toUpperCase();const label=document.createElement('b');label.textContent=name;const button=document.createElement('button');button.type='button';button.dataset.unblockCompany=name;button.textContent='解除拉黑';item.append(icon,label,button);list.append(item)});
+  $('blacklistEmpty').hidden=blockedCompanies.length>0;$('blacklistCount').textContent=blockedCompanies.length;
+}
+
+function blockCompany(name){
+  const clean=String(name||'').trim(),key=companyKey(clean);if(!key||blockedCompanyKeys().has(key))return;
+  if(!confirm(`拉黑“${clean}”吗？该公司的所有岗位将不再出现在检索结果中。`))return;
+  blockedCompanies.push(clean);blockedCompanies=normalizeBlockedCompanies(blockedCompanies);persistTracker();renderJobs(false);if($('jobDialog').open)$('jobDialog').close();toast(`已拉黑“${clean}”`);
+}
+
+async function unblockCompany(name){
+  const key=companyKey(name);blockedCompanies=blockedCompanies.filter(company=>companyKey(company)!==key);persistTracker();renderJobs(false);toast(`已解除“${name}”的拉黑`);await refreshJobResults(false,true);
+}
 
 function addTrackedJob(job,status='saved'){
   const existing=trackedJob(job.id);if(existing)return existing;
@@ -573,7 +603,7 @@ function resolveApplication(done){
 
 function toggleTrackedJob(job){
   const existing=trackedJob(job.id);
-  if(existing){trackerEntries=trackerEntries.filter(entry=>String(entry.id)!==String(job.id));persistTracker();toast('已取消收藏')}
+  if(existing){trackerEntries=trackerEntries.filter(entry=>String(entry.id)!==String(job.id));persistTracker();toast('已取消收藏');refreshJobResults(false,true)}
   else{addTrackedJob(job);toast('岗位已收藏，可在投递看板中管理')}
   renderJobs(false);renderTracker();
 }
@@ -652,9 +682,14 @@ function excludedJobIds(){
   return [...new Set(trackerEntries.map(entry=>String(entry?.id||'').trim()).filter(Boolean))];
 }
 
+function excludedCompanyKeys(){
+  return [...new Set([...trackerEntries.map(entry=>entry?.company),...blockedCompanies].map(companyKey).filter(Boolean))];
+}
+
 function currentJobQuery(){
   const excluded=excludedJobIds().slice(0,120);
-  return {keyword:value('jobKeyword'),province:value('provinceFilter')||'all',city:value('cityFilter')||'all',companyType:value('companyTypeFilter')||'all',batch:value('batchFilter')||'all',audience:value('audienceFilter')||'all',sort:value('sortFilter')||'updated',limit:String(visibleLimit),...(excluded.length?{exclude:excluded.join(',')}:{})};
+  const excludedCompanies=excludedCompanyKeys().slice(0,120);
+  return {keyword:value('jobKeyword'),province:value('provinceFilter')||'all',city:value('cityFilter')||'all',companyType:value('companyTypeFilter')||'all',batch:value('batchFilter')||'all',audience:value('audienceFilter')||'all',sort:value('sortFilter')||'updated',limit:String(visibleLimit),...(excluded.length?{exclude:excluded.join(',')}:{}),...(excludedCompanies.length?{excludeCompany:excludedCompanies.join('|')}:{})};
 }
 
 function currentJobQueryKey(){return JSON.stringify(currentJobQuery())}
@@ -746,23 +781,24 @@ function renderJobs(resetLimit=true){
   const rawKeyword=value('jobKeyword'),keyword=rawKeyword.toLowerCase().normalize('NFKC').replace(/\s+/g,' ').trim(),compactKeyword=keyword.replace(/\s+/g,'');
   const terms=searchTerms(rawKeyword);
   const province=$('provinceFilter').value,city=$('cityFilter').value,companyType=$('companyTypeFilter').value,batch=$('batchFilter').value,audience=$('audienceFilter').value,sort=$('sortFilter').value;
-  const trackedIds=new Set(excludedJobIds());
   const candidateJobs=(jobServerMode?jobs:jobs.filter(job=>{
     const haystack=`${job.title} ${job.company} ${(job.tags||[]).join(' ')} ${job.desc||''} ${job.industry||''} ${job.batch||''} ${job.audience||''} ${job.city||''}`.toLowerCase().normalize('NFKC'),compactHaystack=haystack.replace(/\s+/g,'');
     const relevance=relevanceFor(job,terms);
     const provinceMatch=province==='all'||(province==='全国 / 多地'?job.nationwide:(job.provinces||[]).includes(province));
     return (!keyword||compactHaystack.includes(compactKeyword)||relevance>0)&&provinceMatch&&(city==='all'||(job.cities||[]).includes(city))&&(companyType==='all'||job.companyType===companyType)&&(batch==='all'||(job.batch||'').includes(batch))&&(audience==='all'||(job.audience||'').includes(audience));
   })).map(job=>({...job,relevance:relevanceFor(job,terms),match:analyzeJob(job).score}));
-  activeJobs=candidateJobs.filter(job=>!trackedIds.has(String(job.id)));
-  if(!jobServerMode)activeJobs.sort((a,b)=>sort==='updated'?updatedValue(b.updated)-updatedValue(a.updated):sort==='company'?(a.company||'').localeCompare(b.company||'','zh-CN'):keyword?(b.relevance-a.relevance||b.match-a.match):b.match-a.match);
-  const locallyHidden=candidateJobs.length-activeJobs.length;const total=jobServerMode?Math.max(0,jobServerTotal-locallyHidden):activeJobs.length;$('resultCount').textContent=`${total} 个可浏览岗位`;
+  const hiddenCompanies=new Set([...trackedCompanyKeys(),...blockedCompanyKeys()]);const companyChoices=new Map();
+  candidateJobs.forEach(job=>{const key=companyKey(job.company)||`__job_${job.id}`,current=companyChoices.get(key);if(!current||job.relevance>current.relevance||(job.relevance===current.relevance&&job.match>current.match)||(job.relevance===current.relevance&&job.match===current.match&&updatedValue(job.updated)>updatedValue(current.updated)))companyChoices.set(key,job)});
+  activeJobs=[...companyChoices.entries()].filter(([key])=>!hiddenCompanies.has(key)).map(([,job])=>job);
+  activeJobs.sort((a,b)=>sort==='updated'?updatedValue(b.updated)-updatedValue(a.updated):sort==='company'?(a.company||'').localeCompare(b.company||'','zh-CN'):keyword?(b.relevance-a.relevance||b.match-a.match||updatedValue(b.updated)-updatedValue(a.updated)):b.match-a.match||updatedValue(b.updated)-updatedValue(a.updated));
+  const locallyHidden=companyChoices.size-activeJobs.length;const total=jobServerMode?Math.max(0,jobServerTotal-locallyHidden):activeJobs.length;$('resultCount').textContent=`${total} 家可浏览公司`;
   const shown=Math.min(jobServerMode?activeJobs.length:visibleLimit,activeJobs.length);
   const appliedFilters=[province!=='all'?province:'',city!=='all'?city:'',companyType!=='all'?companyType:''].filter(Boolean);
-  $('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 条${trackerEntries.length?' · 已自动隐藏收藏和投递记录':''}${jobDataLoaded?'':' · 岗位服务正在连接'}`;
+  const hiddenStateCount=new Set([...trackedCompanyKeys(),...blockedCompanyKeys()]).size;$('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 家 · 每家公司仅保留最匹配岗位${hiddenStateCount?' · 已隐藏收藏、投递或拉黑公司':''}${jobDataLoaded?'':' · 岗位服务正在连接'}`;
   const grid=$('jobGrid'); grid.replaceChildren();
   activeJobs.slice(0,jobServerMode?activeJobs.length:visibleLimit).forEach(job=>{
     const card=document.createElement('article');card.className='job-card';card.style.setProperty('--logo',job.color);card.style.setProperty('--match',`${job.match}%`);
-    card.innerHTML=`<div class="job-card-top"><div class="company-logo"></div><div><h2></h2><p class="company"></p></div><strong class="salary"></strong><button class="save-job" data-save-job="${job.id}" aria-label="收藏岗位">☆</button></div><div class="job-meta"><span></span><span></span><span></span></div><p class="job-description"></p><div class="job-tags"></div><div class="job-card-footer"><span class="match-value"><i></i>${job.match}% 匹配</span><button class="detail-button" data-job-id="${job.id}">查看详情 →</button></div>`;
+    card.innerHTML=`<div class="job-card-top"><div class="company-logo"></div><div><h2></h2><p class="company"></p></div><strong class="salary"></strong><button class="save-job" data-save-job="${job.id}" aria-label="收藏岗位">☆</button></div><div class="job-meta"><span></span><span></span><span></span></div><p class="job-description"></p><div class="job-tags"></div><div class="job-card-footer"><span class="match-value"><i></i>${job.match}% 匹配</span><div><button class="block-company" data-block-job="${job.id}">不看这家公司</button><button class="detail-button" data-job-id="${job.id}">查看详情 →</button></div></div>`;
     card.querySelector('.company-logo').textContent=(job.title||job.company||'岗').slice(0,1);card.querySelector('h2').textContent=job.title;card.querySelector('.company').textContent=job.company;card.querySelector('.salary').textContent=job.deadline?`截止 ${job.deadline}`:(job.salary||'');card.querySelector('.job-description').textContent=job.desc;
     const meta=card.querySelectorAll('.job-meta span');meta[0].textContent=job.city||'地点未注明';meta[1].textContent=job.batch||job.experience||'招聘';meta[2].textContent=(job.audience||'学历不限').replace(/\n/g,' / ');
     const saveButton=card.querySelector('.save-job');const tracked=Boolean(trackedJob(job.id));saveButton.textContent=tracked?'★':'☆';saveButton.classList.toggle('active',tracked);saveButton.setAttribute('aria-label',tracked?'取消收藏':'收藏岗位');
@@ -795,7 +831,8 @@ function openJob(id){
   const tailor=document.createElement('button');tailor.className='primary-button';tailor.type='button';tailor.textContent='为此岗位制作简历';tailor.addEventListener('click',()=>tailorResumeForJob(job));
   const link=document.createElement('a');link.className='secondary-button';link.href=job.applicationUrl||bossSearchUrl(job);link.target='_blank';link.rel='noreferrer';link.textContent=job.applicationUrl?'官方投递 ↗':'搜索相似岗位 ↗';
   link.addEventListener('click',()=>beginApplication(job));
-  actions.append(tailor,save,link);
+  const block=document.createElement('button');block.className='secondary-button danger-button';block.type='button';block.textContent='不看这家公司';block.addEventListener('click',()=>blockCompany(job.company));
+  actions.append(tailor,save,link,block);
   content.append(company,title,salary,match,intro,req,actions); $('jobDialog').showModal();
 }
 
@@ -1145,12 +1182,16 @@ document.addEventListener('DOMContentLoaded',async()=>{
   document.querySelectorAll('[data-mobile-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.mobileView)));
   document.querySelectorAll('[data-career-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.careerView)));
   document.querySelector('.brand').addEventListener('click',event=>{event.preventDefault();switchView('home')});
-  $('jobSearchForm').addEventListener('submit',async event=>{event.preventDefault();$('resultSummary').textContent='正在从本站岗位库检索…';const total=await refreshJobResults();toast(`找到 ${total} 个匹配岗位`)});
+  $('jobSearchForm').addEventListener('submit',async event=>{event.preventDefault();$('resultSummary').textContent='正在从本站岗位库检索…';const total=await refreshJobResults();toast(`找到 ${total} 家匹配公司`)});
   $('provinceFilter').addEventListener('change',async()=>{$('cityFilter').value='all';await refreshJobResults()});
   ['cityFilter','companyTypeFilter','batchFilter','audienceFilter','sortFilter'].forEach(id=>$(id).addEventListener('change',()=>refreshJobResults()));
-  $('jobGrid').addEventListener('click',event=>{const save=event.target.closest('[data-save-job]');if(save){const job=jobs.find(item=>String(item.id)===String(save.dataset.saveJob));if(job)toggleTrackedJob(job);return}const button=event.target.closest('[data-job-id]');if(button)openJob(button.dataset.jobId)});
+  $('jobGrid').addEventListener('click',event=>{const block=event.target.closest('[data-block-job]');if(block){const job=jobs.find(item=>String(item.id)===String(block.dataset.blockJob));if(job)blockCompany(job.company);return}const save=event.target.closest('[data-save-job]');if(save){const job=jobs.find(item=>String(item.id)===String(save.dataset.saveJob));if(job)toggleTrackedJob(job);return}const button=event.target.closest('[data-job-id]');if(button)openJob(button.dataset.jobId)});
   $('dialogClose').addEventListener('click',()=>$('jobDialog').close());
   $('jobDialog').addEventListener('click',event=>{if(event.target===$('jobDialog'))$('jobDialog').close()});
+  $('blacklistManagerButton').addEventListener('click',()=>{renderBlacklist();$('blacklistDialog').showModal()});
+  $('blacklistDialogClose').addEventListener('click',()=>$('blacklistDialog').close());
+  $('blacklistDialog').addEventListener('click',event=>{if(event.target===$('blacklistDialog'))$('blacklistDialog').close()});
+  $('blacklistList').addEventListener('click',event=>{const button=event.target.closest('[data-unblock-company]');if(button)unblockCompany(button.dataset.unblockCompany)});
   $('applicationDone').addEventListener('click',()=>resolveApplication(true));
   $('applicationNotDone').addEventListener('click',()=>resolveApplication(false));
   $('applicationConfirmClose').addEventListener('click',()=>resolveApplication(false));
@@ -1169,10 +1210,10 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('exportTracker').addEventListener('click',exportTracker);
   $('trackerBoard').addEventListener('change',event=>{const card=event.target.closest('[data-track-id]');if(card&&event.target.matches('.tracker-status'))updateTrackedEntry(card.dataset.trackId,{status:event.target.value})});
   $('trackerBoard').addEventListener('input',event=>{const card=event.target.closest('[data-track-id]');if(card&&event.target.matches('.tracker-note')){clearTimeout(event.target.timer);event.target.timer=setTimeout(()=>updateTrackedEntry(card.dataset.trackId,{note:event.target.value},false),350)}});
-  $('trackerBoard').addEventListener('click',event=>{const card=event.target.closest('[data-track-id]');if(!card)return;const entry=trackedJob(card.dataset.trackId);if(event.target.closest('.open-track')){const live=jobs.find(job=>String(job.id)===String(entry.id));if(live)openJob(live.id);else window.open(entry.applicationUrl,'_blank','noopener')}if(event.target.closest('.remove-track')&&confirm('从投递看板移除这个岗位吗？')){trackerEntries=trackerEntries.filter(item=>item.id!==entry.id);persistTracker();renderTracker();renderJobs(false)}});
+  $('trackerBoard').addEventListener('click',event=>{const card=event.target.closest('[data-track-id]');if(!card)return;const entry=trackedJob(card.dataset.trackId);if(event.target.closest('.open-track')){const live=jobs.find(job=>String(job.id)===String(entry.id));if(live)openJob(live.id);else window.open(entry.applicationUrl,'_blank','noopener')}if(event.target.closest('.remove-track')&&confirm('从投递看板移除这个岗位吗？')){trackerEntries=trackerEntries.filter(item=>item.id!==entry.id);persistTracker();renderTracker();renderJobs(false);refreshJobResults(false,true)}});
   document.querySelectorAll('[data-go-view]').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.goView==='tools'&&button.dataset.toolAnchor)openTool(button.dataset.toolAnchor);else switchView(button.dataset.goView)}));
   setInterval(async()=>{if(!jobDataLoaded&&!$('jobsView').classList.contains('active'))return;await refreshJobResults(false,true)},2*60*60*1000);
-  const requested=location.hash.slice(1);if(['home','study','play','guides','life','tools','resume','jobs','tracker','about'].includes(requested))switchView(requested);else switchView('home');
+  const requested=location.hash.slice(1);if(['home','projects','study','play','guides','life','tools','resume','jobs','tracker','about'].includes(requested))switchView(requested);else switchView('home');
   const preload=()=>jobCachePromise.then(()=>loadOnlineJobs(false));if('requestIdleCallback'in window)requestIdleCallback(preload,{timeout:2500});else setTimeout(preload,1200);
   setTimeout(checkPendingApplication,1200);
 });
