@@ -656,8 +656,8 @@ async function writeJobCache(dataset){
 function jobSourceLabel(dataset,cached=false){
   const updated=dataset.generatedAt?new Date(dataset.generatedAt):null,source=dataset.source||'在线岗位库';
   const base=!updated||Number.isNaN(updated.getTime())?`已连接${source}`:`${source} · 同步于 ${updated.toLocaleString('zh-CN',{hour12:false})}`;
-  const count=Number(dataset.total??jobs.length);
-  return `${base}${cached?' · 已快速载入本地缓存':''} · 每 2 小时更新 · ${count.toLocaleString('zh-CN')} 条匹配`;
+  const libraryCount=Number(dataset.meta?.totalJobs??dataset.total??jobs.length);
+  return `${base}${cached?' · 已快速载入本地缓存':''} · 每 2 小时更新 · 岗位库 ${libraryCount.toLocaleString('zh-CN')} 条`;
 }
 
 function applyJobDataset(dataset,cached=false){
@@ -791,7 +791,7 @@ function renderJobs(resetLimit=true){
   candidateJobs.forEach(job=>{const key=companyKey(job.company)||`__job_${job.id}`,current=companyChoices.get(key);if(!current||job.relevance>current.relevance||(job.relevance===current.relevance&&job.match>current.match)||(job.relevance===current.relevance&&job.match===current.match&&updatedValue(job.updated)>updatedValue(current.updated)))companyChoices.set(key,job)});
   activeJobs=[...companyChoices.entries()].filter(([key])=>!hiddenCompanies.has(key)).map(([,job])=>job);
   activeJobs.sort((a,b)=>sort==='updated'?updatedValue(b.updated)-updatedValue(a.updated):sort==='company'?(a.company||'').localeCompare(b.company||'','zh-CN'):keyword?(b.relevance-a.relevance||b.match-a.match||updatedValue(b.updated)-updatedValue(a.updated)):b.match-a.match||updatedValue(b.updated)-updatedValue(a.updated));
-  const locallyHidden=companyChoices.size-activeJobs.length;const total=jobServerMode?Math.max(0,jobServerTotal-locallyHidden):activeJobs.length;$('resultCount').textContent=`${total} 家可浏览公司`;
+  const locallyHidden=companyChoices.size-activeJobs.length;const total=jobServerMode?Math.max(0,jobServerTotal-locallyHidden):activeJobs.length;$('resultCount').textContent=keyword?`${total} 家匹配公司`:`${total} 家可浏览公司`;
   const shown=Math.min(jobServerMode?activeJobs.length:visibleLimit,activeJobs.length);
   const appliedFilters=[province!=='all'?province:'',city!=='all'?city:'',companyType!=='all'?companyType:''].filter(Boolean);
   const hiddenStateCount=new Set([...trackedCompanyKeys(),...blockedCompanyKeys()]).size;$('resultSummary').textContent=`${keyword?`“${rawKeyword}” · `:''}${appliedFilters.length?`${appliedFilters.join(' · ')} · `:''}当前显示 ${shown} 家 · 每家公司仅保留最匹配岗位${hiddenStateCount?' · 已隐藏收藏、投递或拉黑公司':''}${jobDataLoaded?'':' · 岗位服务正在连接'}`;

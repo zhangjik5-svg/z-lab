@@ -83,6 +83,55 @@ def search_terms(value: str) -> list[str]:
     return list(dict.fromkeys([*specific, *words]))
 
 
+def keyword_score(job: dict[str, object], compact_keyword: str, terms: list[str]) -> int:
+    """Rank a real title hit ahead of incidental text in an aggregated posting."""
+    title = normalized_text(job.get("title"))
+    compact_title = re.sub(r"\s+", "", title)
+    tags = normalized_text(" ".join(map(str, job.get("tags") or [])))
+    compact_tags = re.sub(r"\s+", "", tags)
+    description = normalized_text(job.get("desc"))
+    compact_description = re.sub(r"\s+", "", description)
+    score = sum(7 if term in title else 5 if term in tags else 2 if term in job["_search"] else 0 for term in terms)
+    if not compact_keyword:
+        return score
+    if compact_title == compact_keyword:
+        score += 120
+    elif compact_title.startswith(compact_keyword):
+        score += 100
+    elif compact_keyword in compact_title:
+        score += 80
+    elif compact_keyword in compact_tags:
+        score += 50
+    elif compact_keyword in compact_description:
+        score += 25
+    return score
+
+
+def matched_display_title(job: dict[str, object], keyword: str) -> str:
+    """Show the matched role instead of an unrelated first role in a job bundle."""
+    original = str(job.get("title") or "岗位")
+    compact_keyword = re.sub(r"\s+", "", normalized_text(keyword))
+    if not compact_keyword:
+        return original
+    title_and_description = f"{original}\n{job.get('desc') or ''}"
+    compact_roles = re.sub(r"\s+", "", normalized_text(title_and_description))
+    if compact_keyword not in compact_roles:
+        return original
+    candidates = [part.strip(" .。:：-—…") for part in re.split(r"[,，、;；|\n]+", title_and_description)]
+    matches = [
+        part for part in candidates
+        if compact_keyword in re.sub(r"\s+", "", normalized_text(part)) and 1 < len(part) <= 32
+    ]
+    if matches:
+        chosen = min(matches, key=len)
+        clean_keyword = re.sub(r"\s+", "", keyword.strip())
+        if len(chosen) > len(clean_keyword) + 12:
+            return f"{clean_keyword}等岗位"
+        return chosen if chosen.endswith(("等岗位", "岗位")) else f"{chosen}等岗位"
+    clean_keyword = re.sub(r"\s+", "", keyword.strip())
+    return f"{clean_keyword}等岗位" if clean_keyword else original
+
+
 def regions(location: object) -> tuple[list[str], list[str], bool]:
     text = re.sub(r"\s+", "", str(location or ""))
     nationwide = bool(re.search(r"全国|多地|地点不限|不限地点|远程", text))
@@ -173,10 +222,12 @@ class JobIndex:
         for job in self.jobs:
             if str(job.get("id") or "") in excluded or company_key(job.get("company")) in excluded_companies:
                 continue
-            title = normalized_text(job.get("title"))
-            tags = normalized_text(" ".join(map(str, job.get("tags") or [])))
-            score = sum(7 if term in title else 5 if term in tags else 2 if term in job["_search"] else 0 for term in terms)
-            keyword_match = not compact_keyword or compact_keyword in job["_compact"] or score > 0
+            score = keyword_score(job, compact_keyword, terms)
+            keyword_match = (
+                not compact_keyword
+                or compact_keyword in job["_compact"]
+                or bool(terms) and all(term in job["_search"] for term in terms)
+            )
             province_match = province == "all" or (province == "全国 / 多地" and job["_nationwide"]) or province in job["_provinces"]
             if not (keyword_match and province_match):
                 continue
@@ -191,6 +242,7 @@ class JobIndex:
             if audience != "all" and audience not in str(job.get("audience") or ""):
                 continue
             matched.append((job, score))
+        matched_job_count = len(matched)
         best_by_company: dict[str, tuple[dict[str, object], int]] = {}
         for job, score in matched:
             key = company_key(job.get("company")) or f"__job_{job.get('id', '')}"
@@ -199,25 +251,34 @@ class JobIndex:
                 best_by_company[key] = (job, score)
         matched = list(best_by_company.values())
         if sort == "updated":
-            matched.sort(key=lambda item: updated_value(item[0].get("updated")), reverse=True)
+            matched.sort(
+                key=lambda item: ((item[1] if compact_keyword else 0), updated_value(item[0].get("updated"))),
+                reverse=True,
+            )
         elif sort == "company":
             matched.sort(key=lambda item: str(item[0].get("company") or ""))
         else:
             matched.sort(key=lambda item: (item[1], updated_value(item[0].get("updated"))), reverse=True)
         fields = self.payload.get("fields") or []
-        rows = [[job.get(field, "") for field in fields] for job, _score in matched[:limit]]
+        rows = []
+        for job, _score in matched[:limit]:
+            display_job = dict(job)
+            display_job["title"] = matched_display_title(job, keyword)
+            rows.append([display_job.get(field, "") for field in fields])
         return {
             "schemaVersion": 2,
             "fields": fields,
             "generatedAt": self.payload.get("generatedAt"),
             "source": self.payload.get("source", "腾讯表格 + 飞书表格"),
             "total": len(matched),
+            "matchedJobs": matched_job_count,
             "limit": limit,
             "jobs": rows,
             "meta": {
                 "provinces": self.meta["provinces"],
                 "cities": sorted(city_counts.items(), key=lambda item: (-item[1], item[0])),
                 "companyTypes": self.meta["companyTypes"],
+                "totalJobs": len(self.jobs),
             },
         }
 
