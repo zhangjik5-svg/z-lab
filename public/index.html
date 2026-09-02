@@ -69,21 +69,39 @@
 
       <article class="featured-project">
         <div class="featured-project-copy">
-          <span class="project-status live">软件已验证</span>
-          <h2>Zephyr Health Node · 自适应健康监测节点</h2>
-          <p>基于 Zephyr RTOS 设计采集、分析和上报链路，使用固定容量消息队列隔离任务，通过 EWMA 与状态机识别信号趋势并动态调整采样频率，同时加入看门狗与 Shell 诊断接口，突出并发、资源约束和可测试性。</p>
-          <div class="project-tags"><span>C</span><span>Zephyr 4.4</span><span>RTOS</span><span>ESP32-S3</span><span>Ztest</span><span>State Machine</span></div>
-          <div class="project-actions"><a class="primary-button" href="https://github.com/zhangjik5-svg/zlab-zephyr-health-node" target="_blank" rel="noopener">查看源码与说明 ↗</a></div>
+          <span class="project-status live">实物联调 · 软件监控</span>
+          <h2>深海浮标供电系统 · BQ40Z80 电池状态监测</h2>
+          <p>面向浮标锂电池供电模块，使用 STM32F429 通过 SMBus 读取 BQ40Z80 的温度、电压、电流、电量及状态寄存器，并用 EV2400 与 bqStudio 对寄存器值、状态位和短时趋势进行交叉验证。</p>
+          <div class="project-tags"><span>STM32F429</span><span>C</span><span>SMBus</span><span>BQ40Z80</span><span>EV2400</span><span>bqStudio</span></div>
+          <div class="project-actions"><a class="primary-button" href="https://github.com/zhangjik5-svg/stm32-bq40z80-battery-monitor" target="_blank" rel="noopener">查看源码与实验记录 ↗</a></div>
         </div>
-        <div class="project-metrics" aria-label="Zephyr Health Node 项目要点">
-          <article><span>实时系统</span><b>RTOS</b><small>Zephyr 4.4</small></article>
-          <article><span>开发语言</span><b>C</b><small>固定容量数据结构</small></article>
-          <article><span>软件验证</span><b>Ztest</b><small>native_sim 可复现</small></article>
-          <article><span>目标平台</span><b>S3</b><small>ESP32-S3 固件构建</small></article>
+        <div class="project-metrics" aria-label="BQ40Z80 项目要点">
+          <article><span>实验电池组</span><b>2S</b><small>两节锂电池</small></article>
+          <article><span>实验电压</span><b>7.662 V</b><small>bqStudio 样本读数</small></article>
+          <article><span>通信接口</span><b>SMBus</b><small>Read Word 事务</small></article>
+          <article><span>对照工具</span><b>EV2400</b><small>寄存器与曲线监控</small></article>
         </div>
       </article>
 
+      <section class="battery-case-study" aria-labelledby="batteryCaseTitle">
+        <div class="battery-case-head"><div><p class="eyebrow">HARDWARE LOOP · 可核验实验</p><h2 id="batteryCaseTitle">从电池组到软件监控，形成一条完整验证链路。</h2></div><p>2S 锂电池组接入 BQ40Z80 电量计；STM32F429 负责嵌入式数据读取，EV2400 与 bqStudio 用作调试和对照。截图中的 7.662 V、22.9 °C 与 100% 均为单次实验样本，不作为长期性能指标。</p></div>
+        <div class="battery-flow" aria-label="电池状态监测数据链路"><span><b>01</b>两节锂电池组</span><i>→</i><span><b>02</b>BQ40Z80 采集</span><i>→</i><span><b>03</b>SMBus 通信</span><i>→</i><span><b>04</b>STM32 / bqStudio 验证</span></div>
+        <div class="battery-gallery">
+          <figure class="battery-gallery-main"><a href="/projects/bq40z80/battery-pack-overview.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/battery-pack-overview.jpg" alt="两节锂电池与 BQ40Z80 电量计实验组件" loading="lazy"></a><figcaption><b>电池组与电量计</b><span>两节锂电池连接 BQ40Z80 实验板，完成电芯采样与 SMBus 接口引出。</span></figcaption></figure>
+          <figure><a href="/projects/bq40z80/bqstudio-registers.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/bqstudio-registers.jpg" alt="bqStudio 中的 BQ40Z80 寄存器监控界面" loading="lazy"></a><figcaption><b>寄存器与状态位</b><span>bqStudio 识别芯片并查看温度、电压、状态与保护标志。</span></figcaption></figure>
+          <figure><a href="/projects/bq40z80/bqstudio-voltage-temperature-graph.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/bqstudio-voltage-temperature-graph.jpg" alt="bqStudio 电压与温度短时曲线" loading="lazy"></a><figcaption><b>短时趋势监控</b><span>记录电压与温度曲线，辅助判断数据稳定性。</span></figcaption></figure>
+        </div>
+      </section>
+
       <div class="project-card-grid showcase-grid">
+        <article class="showcase-card embedded-card">
+          <div class="project-card-top"><span>RTOS · C</span><i class="project-status live">软件验证</i></div>
+          <h2>Zephyr Health Node</h2>
+          <p>基于 Zephyr RTOS 设计采集、分析和上报链路，使用固定容量消息队列隔离任务，通过 EWMA 与状态机动态调整采样频率，并加入看门狗与 Shell 诊断接口。</p>
+          <div class="project-tags"><span>C</span><span>Zephyr 4.4</span><span>ESP32-S3</span><span>Ztest</span></div>
+          <div class="project-verification"><span>✓ native_sim 软件验证</span><span>✓ 固定容量数据结构</span><span class="pending">○ 硬件验收待完成</span></div>
+          <a class="text-link" href="https://github.com/zhangjik5-svg/zlab-zephyr-health-node" target="_blank" rel="noopener">查看 GitHub ↗</a>
+        </article>
         <article class="showcase-card embedded-card">
           <div class="project-card-top"><span>EMBEDDED · C++11</span><i class="project-status live">软件验证</i></div>
           <h2>MQTT Message Guard</h2>
@@ -92,7 +110,7 @@
           <div class="project-verification"><span>✓ 主机单元测试</span><span>✓ 官方工程 CI 集成构建</span><span class="pending">○ 实机压力测试待完成</span></div>
           <a class="text-link" href="https://github.com/zhangjik5-svg/zlab-mqtt-message-guard" target="_blank" rel="noopener">查看 GitHub ↗</a>
         </article>
-        <article class="showcase-card supporting-card">
+        <article class="showcase-card supporting-card wide-supporting">
           <div class="project-card-top"><span>SUPPORTING PROJECT · WEB</span><i class="project-status building">补充能力</i></div>
           <h2>Z Lab · 个人数字工作台</h2>
           <p>独立完成需求梳理、前后端实现和 Linux 部署的个人 Web 产品。它不作为嵌入式主项目，仅用于补充展示完整交付、数据处理、线上运维和持续迭代能力。</p>
@@ -102,7 +120,7 @@
         </article>
       </div>
 
-      <section class="project-boundary" aria-labelledby="projectBoundaryTitle"><div><p class="eyebrow">VERIFICATION NOTE</p><h2 id="projectBoundaryTitle">以软件设计和可复现验证为主，不虚构硬件结果。</h2></div><p><b>Ztest / Native Sim / CI</b>代表测试或构建可以复现；<b>实机压力测试与硬件验收</b>仍明确标注待完成。面试时可以重点讲任务划分、消息传递、状态机、内存边界和测试设计。</p></section>
+      <section class="project-boundary" aria-labelledby="projectBoundaryTitle"><div><p class="eyebrow">VERIFICATION NOTE</p><h2 id="projectBoundaryTitle">实物项目给实验证据，软件项目给可复现验证。</h2></div><p><b>BQ40Z80 项目</b>展示本人实验照片、寄存器监控和数据曲线；<b>Ztest / Native Sim / CI</b>代表软件测试或构建可以复现。尚未完成的实机压力测试仍单独标注，不把调试样本包装成量产结论。</p></section>
     </section>
 
     <section id="studyView" class="view" aria-labelledby="studyTitle">
