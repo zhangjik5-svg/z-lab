@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260825-cute">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260825-cute">
   <link rel="manifest" href="site-manifest.json?v=20260825-zlab3">
-  <link rel="stylesheet" href="styles.css?v=20260902-project39">
+  <link rel="stylesheet" href="styles.css?v=20260902-project40">
 </head>
 <body>
   <header class="topbar">
@@ -88,6 +88,8 @@
         <div class="battery-flow" aria-label="电池状态监测数据链路"><span><b>01</b>两节锂电池组</span><i>→</i><span><b>02</b>BQ40Z80 采集</span><i>→</i><span><b>03</b>SMBus 通信</span><i>→</i><span><b>04</b>STM32 / bqStudio 验证</span></div>
         <div class="battery-gallery">
           <figure class="battery-gallery-main"><a href="/projects/bq40z80/battery-pack-overview.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/battery-pack-overview.jpg" alt="两节锂电池与 BQ40Z80 电量计实验组件" loading="lazy"></a><figcaption><b>电池组与电量计</b><span>两节锂电池连接 BQ40Z80 实验板，完成电芯采样与 SMBus 接口引出。</span></figcaption></figure>
+          <figure><a href="/projects/bq40z80/stm32f429-display.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/stm32f429-display.jpg" alt="STM32F429 开发板屏幕显示 BQ40Z80 读取结果" loading="lazy"></a><figcaption><b>STM32F429 板端读取</b><span>开发板经 SMBus 读取温度、电压、电流与电量，并在 TFT 屏幕显示；屏幕标题沿用早期测试模板。</span></figcaption></figure>
+          <figure><a href="/projects/bq40z80/stm32f429-readout-closeup.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/stm32f429-readout-closeup.jpg" alt="STM32F429 开发板 BQ40Z80 数据读取特写" loading="lazy"></a><figcaption><b>板端数据特写</b><span>现场读数约为 295.4 K、7.663 V、0 mA 与 100%，用于和 bqStudio 同步对照。</span></figcaption></figure>
           <figure><a href="/projects/bq40z80/bqstudio-registers.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/bqstudio-registers.jpg" alt="bqStudio 中的 BQ40Z80 寄存器监控界面" loading="lazy"></a><figcaption><b>寄存器与状态位</b><span>bqStudio 识别芯片并查看温度、电压、状态与保护标志。</span></figcaption></figure>
           <figure><a href="/projects/bq40z80/bqstudio-voltage-temperature-graph.jpg" target="_blank" rel="noopener"><img src="/projects/bq40z80/bqstudio-voltage-temperature-graph.jpg" alt="bqStudio 电压与温度短时曲线" loading="lazy"></a><figcaption><b>短时趋势监控</b><span>记录电压与温度曲线，辅助判断数据稳定性。</span></figcaption></figure>
         </div>
@@ -476,13 +478,13 @@
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(sessionStorage.getItem('zlab-sw-project39-reloaded'))return;
-        sessionStorage.setItem('zlab-sw-project39-reloaded','1');
+        if(sessionStorage.getItem('zlab-sw-project40-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project40-reloaded','1');
         location.reload();
       });
       navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
     }
   </script>
-  <script src="app.js?v=20260902-project39" defer></script>
+  <script src="app.js?v=20260902-project40" defer></script>
 </body>
 </html>
