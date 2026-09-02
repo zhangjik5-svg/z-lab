@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260825-cute">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260825-cute">
   <link rel="manifest" href="site-manifest.json?v=20260825-zlab3">
-  <link rel="stylesheet" href="styles.css?v=20260901-project38">
+  <link rel="stylesheet" href="styles.css?v=20260902-project39">
 </head>
 <body>
   <header class="topbar">
@@ -476,13 +476,13 @@
   <script>
     if('serviceWorker' in navigator){
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(sessionStorage.getItem('zlab-sw-project38-reloaded'))return;
-        sessionStorage.setItem('zlab-sw-project38-reloaded','1');
+        if(sessionStorage.getItem('zlab-sw-project39-reloaded'))return;
+        sessionStorage.setItem('zlab-sw-project39-reloaded','1');
         location.reload();
       });
       navigator.serviceWorker.getRegistration().then(registration=>registration?.update()).catch(()=>{});
     }
   </script>
-  <script src="app.js?v=20260901-project38" defer></script>
+  <script src="app.js?v=20260902-project39" defer></script>
 </body>
 </html>
