@@ -131,6 +131,7 @@
 
 /* Project 37: embedded-software-first portfolio */
 .embedded-card{border-color:#8da99a!important;background:linear-gradient(180deg,#f8fbf8,#fff)!important}.supporting-card{background:#f5f3ec!important}.supporting-links{display:flex;flex-wrap:wrap;gap:18px;margin-top:auto}.supporting-links .text-link{margin-top:0}.projects-view .featured-project{background:radial-gradient(circle at 85% 10%,rgba(150,191,168,.16),transparent 34%),linear-gradient(135deg,#163c2e,#244d3d 62%,#315f4b)}
+.showcase-grid .competition-card{grid-column:1/-1;min-height:280px;border-color:#b59a62!important;background:linear-gradient(135deg,#fffdf6,#f5f8f2)!important;box-shadow:0 18px 42px rgba(53,77,63,.08)}
 
 /* BQ40Z80 project evidence */
 .battery-case-study{margin-bottom:16px;padding:28px;border:1px solid rgba(42,73,60,.13);border-radius:22px;background:rgba(255,255,255,.78)}

@@ -1,4 +1,4 @@
-const CACHE_NAME='zlab-project41';
+const CACHE_NAME='zlab-project42';
 const CORE_ASSETS=[
   '/',
   '/index.html',
