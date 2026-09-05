@@ -8,6 +8,7 @@
 
 - [Zephyr Health Node](https://github.com/zhangjik5-svg/zlab-zephyr-health-node)：Zephyr RTOS、多线程消息流水线、整数 EWMA 状态机、Ztest 与 ESP32-S3 固件构建。
 - [MQTT Message Guard](https://github.com/zhangjik5-svg/zlab-mqtt-message-guard)：C++11 固定内存组件、滑动窗口去重、令牌桶限流、隔离恢复与上游工程集成。
+- [STM32G431 压力传感器自动测试装置](https://github.com/zhangjik5-svg/stm32g431-pressure-sensor-tester)：双频 PWM、ADC 压力采集、输入捕获反馈与六点非阻塞自动测试；主机测试通过，实物板测待完成。
 
 ## 在研项目有限公开
 
@@ -18,6 +19,8 @@
 面向水域剖面监测的嵌入式系统集成项目。本人负责总体方案、任务协调和传感器采集硬件设计，参与控制器、传感节点、数据通信与移动平台联调。
 
 项目与比赛尚未结束，本仓库仅公开职责范围和技术方向，不包含比赛说明书、源码、原理图、通信实现、性能指标、机械结构、测试数据及现场资料。比赛结果以官方发布为准。
+
+[查看有限公开仓库](https://github.com/zhangjik5-svg/underwater-profile-monitoring-system)
 
 ![Z Lab 项目预览](public/og.png)
 
