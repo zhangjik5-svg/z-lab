@@ -142,7 +142,7 @@ let resumeVersions = [];
 let jobDataLoaded=false,jobDataPromise=null,jobPromiseKey='',jobCachePromise=null,jobServerMode=false,jobSnapshotMode=false,jobServerTotal=0,jobServerMeta=null,jobRequestKey='',jobSnapshotPromise=null;
 const JOB_CACHE_DB='zlab-job-cache-v2',JOB_CACHE_STORE='datasets',JOB_CACHE_KEY='current';
 const trackerStatuses = {saved:'已收藏',applied:'已投递',interview:'面试中',offer:'Offer',closed:'已结束'};
-const TRACKER_LOCAL_KEY='zhida-tracker',BLOCKED_COMPANIES_LOCAL_KEY='zhida-company-blocklist',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_PROVIDER_KEY='zhida-tracker-cloud-provider',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
+const TRACKER_LOCAL_KEY='zhida-tracker',BLOCKED_COMPANIES_LOCAL_KEY='zhida-company-blocklist',TRACKER_BACKUP_KEY='zhida-tracker-backup-v1',TRACKER_CLOUD_USER_KEY='zhida-tracker-cloud-user',TRACKER_CLOUD_PROVIDER_KEY='zhida-tracker-cloud-provider',TRACKER_CLOUD_DIRTY_KEY='zhida-tracker-cloud-dirty';
 let trackerCloud={authenticated:false,user:null,revision:0,syncing:false,syncTimer:null};
 
 const $ = (id) => document.getElementById(id);
@@ -310,14 +310,22 @@ function normalizeBlockedCompanies(items){
 }
 
 function loadProductState(){
-  try{trackerEntries=JSON.parse(localStorage.getItem(TRACKER_LOCAL_KEY)||'[]');if(!Array.isArray(trackerEntries))trackerEntries=[]}catch{trackerEntries=[]}
+  try{
+    const saved=JSON.parse(localStorage.getItem(TRACKER_LOCAL_KEY)||'null');
+    if(Array.isArray(saved))trackerEntries=saved;
+    else{const backup=JSON.parse(localStorage.getItem(TRACKER_BACKUP_KEY)||'null');trackerEntries=Array.isArray(backup?.entries)?backup.entries:[]}
+  }catch{trackerEntries=[]}
   try{blockedCompanies=normalizeBlockedCompanies(JSON.parse(localStorage.getItem(BLOCKED_COMPANIES_LOCAL_KEY)||'[]'))}catch{blockedCompanies=[]}
   try{resumeVersions=JSON.parse(localStorage.getItem('zhida-resume-versions')||'[]');if(!Array.isArray(resumeVersions))resumeVersions=[]}catch{resumeVersions=[]}
   renderVersionOptions();updateTrackerCount();renderBlacklist();
 }
 
 function writeTrackerLocal(dirty=false){
-  try{localStorage.setItem(TRACKER_LOCAL_KEY,JSON.stringify(trackerEntries));localStorage.setItem(BLOCKED_COMPANIES_LOCAL_KEY,JSON.stringify(blockedCompanies));if(dirty)localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1');else localStorage.removeItem(TRACKER_CLOUD_DIRTY_KEY)}catch{}
+  try{
+    const payload={version:1,savedAt:new Date().toISOString(),entries:trackerEntries,blockedCompanies};
+    if(trackerEntries.length||blockedCompanies.length||!localStorage.getItem(TRACKER_BACKUP_KEY))localStorage.setItem(TRACKER_BACKUP_KEY,JSON.stringify(payload));
+    localStorage.setItem(TRACKER_LOCAL_KEY,JSON.stringify(trackerEntries));localStorage.setItem(BLOCKED_COMPANIES_LOCAL_KEY,JSON.stringify(blockedCompanies));if(dirty)localStorage.setItem(TRACKER_CLOUD_DIRTY_KEY,'1');else localStorage.removeItem(TRACKER_CLOUD_DIRTY_KEY)
+  }catch{}
   updateTrackerCount();renderBlacklist();
 }
 
