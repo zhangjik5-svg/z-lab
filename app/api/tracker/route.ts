@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { getChatGPTUser } from '@/app/chatgpt-auth';
+import { getCurrentUser } from '@/app/auth';
 import { getDb } from '@/db';
 import { trackerStates } from '@/db/schema';
 
@@ -100,7 +100,7 @@ async function ensureState(userId: string, email: string) {
 }
 
 export async function GET() {
-  const user = await getChatGPTUser();
+  const user = await getCurrentUser();
   if (!user) return json({ authenticated: false, error: 'sign_in_required' }, 401);
 
   const state = await ensureState(user.userId, user.email);
@@ -109,7 +109,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const user = await getChatGPTUser();
+  const user = await getCurrentUser();
   if (!user) return json({ authenticated: false, error: 'sign_in_required' }, 401);
 
   let body: unknown;

@@ -1,4 +1,4 @@
-import { getChatGPTUser } from '@/app/chatgpt-auth';
+import { getCurrentUser } from '@/app/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +8,7 @@ const jsonHeaders = {
 };
 
 export async function GET() {
-  const user = await getChatGPTUser();
+  const user = await getCurrentUser();
   if (!user) {
     return Response.json({ authenticated: false }, { headers: jsonHeaders });
   }
