@@ -106,7 +106,27 @@
         </div>
       </section>
 
+      <section class="battery-case-study fuel-cell-case-study" aria-labelledby="fuelCellCaseTitle">
+        <div class="battery-case-head"><div><p class="eyebrow">POWER TEST · FIELD DEBUG</p><h2 id="fuelCellCaseTitle">燃料电池监控上位机：把真实功率测试接入可追溯的数据链路。</h2></div><p>本人独立完成燃料电池、蓄电池组、功率计与电子负载的测试回路接线，并开发 Python 串口监控上位机。系统通过 SIO 协议读取运行数据，实时显示曲线、保存 Excel，并生成运行分析报告。</p></div>
+        <div class="battery-flow" aria-label="燃料电池功率测试数据链路"><span><b>01</b>燃料电池输出</span><i>→</i><span><b>02</b>蓄电池缓冲</span><i>→</i><span><b>03</b>电子负载耗电</span><i>→</i><span><b>04</b>SIO / 上位机记录</span></div>
+        <div class="battery-gallery fuel-cell-gallery">
+          <figure class="battery-gallery-main"><a href="/projects/fuel-cell-monitor/monitoring-ui.jpg" target="_blank" rel="noopener"><img src="/projects/fuel-cell-monitor/monitoring-ui.jpg" alt="燃料电池监控上位机实时运行画面" loading="lazy"></a><figcaption><b>上位机实时监控</b><span>串口状态、实时参数、功率与温度曲线以及收发日志同屏显示。</span></figcaption></figure>
+          <figure><a href="/projects/fuel-cell-monitor/wiring-diagram.png" target="_blank" rel="noopener"><img src="/projects/fuel-cell-monitor/wiring-diagram.png" alt="燃料电池功率测试系统接线示意图" loading="lazy"></a><figcaption><b>测试回路接线</b><span>燃料电池供电，蓄电池组缓冲，电子负载模拟耗电，功率计记录回路读数。</span></figcaption></figure>
+          <figure><a href="/projects/fuel-cell-monitor/test-bench.jpg" target="_blank" rel="noopener"><img src="/projects/fuel-cell-monitor/test-bench.jpg" alt="燃料电池功率测试实验台" loading="lazy"></a><figcaption><b>现场联调</b><span>使用真实设备完成线下接线、串口通信和功率测试验证。</span></figcaption></figure>
+          <figure><a href="/projects/fuel-cell-monitor/power-load-reading.jpg" target="_blank" rel="noopener"><img src="/projects/fuel-cell-monitor/power-load-reading.jpg" alt="功率计与电子负载的现场读数" loading="lazy"></a><figcaption><b>仪器读数对照</b><span>功率计和电子负载分别反映测量回路与耗电端状态。</span></figcaption></figure>
+        </div>
+        <div class="project-verification fuel-cell-verification"><span>✓ 独立完成测试回路接线与现场调试</span><span>✓ Python / pyserial / Tkinter / openpyxl</span><span>✓ 2,131 个有效采样 · 约 717.47 Wh 本次采集累计输出</span><span class="pending">○ 厂商原始协议资料不公开</span></div>
+      </section>
+
       <div class="project-card-grid showcase-grid">
+        <article class="showcase-card embedded-card">
+          <div class="project-card-top"><span>FUEL CELL · PYTHON</span><i class="project-status live">实物联调</i></div>
+          <h2>燃料电池监控上位机系统</h2>
+          <p>独立完成测试回路接线和上位机开发。通过 SIO 串口协议周期读取燃料电池运行数据，实现实时曲线、Excel 记录、告警识别、历史回放和运行报告生成。</p>
+          <div class="project-tags"><span>Python</span><span>pyserial</span><span>Tkinter</span><span>SIO</span><span>数据分析</span></div>
+          <div class="project-verification"><span>✓ 真实设备线下调试</span><span>✓ 2,131 个有效采样</span><span>✓ 接线、代码和联调由本人完成</span></div>
+          <a class="text-link" href="#fuelCellCaseTitle">查看测试证据 ↓</a>
+        </article>
         <article class="showcase-card embedded-card">
           <div class="project-card-top"><span>SENSOR TEST · STM32G431</span><i class="project-status live">主机测试通过</i></div>
           <h2>压力传感器自动测试装置</h2>
