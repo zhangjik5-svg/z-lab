@@ -317,6 +317,7 @@ function loadProductState(){
   }catch{trackerEntries=[]}
   try{blockedCompanies=normalizeBlockedCompanies(JSON.parse(localStorage.getItem(BLOCKED_COMPANIES_LOCAL_KEY)||'[]'))}catch{blockedCompanies=[]}
   try{resumeVersions=JSON.parse(localStorage.getItem('zhida-resume-versions')||'[]');if(!Array.isArray(resumeVersions))resumeVersions=[]}catch{resumeVersions=[]}
+  writeTrackerLocal(false);
   renderVersionOptions();updateTrackerCount();renderBlacklist();
 }
 
