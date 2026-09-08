@@ -27,6 +27,8 @@
 ![实验台全景](docs/images/test-bench.jpg)
 ![功率与电子负载读数](docs/images/power-load-reading.jpg)
 ![功率计读数](docs/images/power-meter-reading.jpg)
+![串口监控代码](docs/images/serial-monitor-code-overview.png)
+![协议数据记录](docs/images/protocol-data-recorder.png)
 
 ## 运行
 
